@@ -152,4 +152,77 @@ describe("PromiseAPlus impl", () => {
       });
     });
   });
+
+  describe("The Promise Resolution Procedure", () => {
+    test("If promise and x refer to the same object, reject promise with a TypeError as the reason.", () => {
+      let resolveP: any;
+      let p = new PromiseAPlus((resolve) => {
+        resolveP = resolve;
+      });
+      resolveP(p);
+      return new Promise<void>((done) => {
+        p.then(undefined, (reason) => {
+          expect(reason).toBeInstanceOf(TypeError);
+          done();
+        });
+      });
+    });
+    test("If x is a promise, adopt its state", () => {
+      let resolveP: any;
+      let p = new PromiseAPlus((resolve) => {
+        resolveP = resolve;
+      });
+      let resolveP2: any;
+      let p2 = new PromiseAPlus((resolve) => {
+        resolveP2 = resolve;
+      });
+      resolveP(p2);
+      expect(p[stateSymbol]).toBe(PromiseAPlusState.Pending);
+      resolveP2(1);
+      expect(p[stateSymbol]).toBe(PromiseAPlusState.Fulfilled);
+      expect(p[resultSymbol]).toBe(1);
+
+      let rejectP3: any;
+      let p3 = new PromiseAPlus((_, reject) => {
+        rejectP3 = reject;
+      });
+      let rejectP4: any;
+      let p4 = new PromiseAPlus((_, reject) => {
+        rejectP4 = reject;
+      });
+      rejectP3(p4);
+      expect(p3[stateSymbol]).toBe(PromiseAPlusState.Pending);
+      let err = new Error();
+      rejectP4(err);
+      expect(p3[stateSymbol]).toBe(PromiseAPlusState.Rejected);
+      expect(p3[resultSymbol]).toBe(err);
+    });
+
+    test("if x is an object or function", () => {
+      let resolveP1: any;
+      let p1 = new PromiseAPlus((resolve) => {
+        resolveP1 = resolve;
+      });
+      let obj = {};
+      resolveP1(obj);
+      expect(p1[resultSymbol]).toBe(obj);
+
+      let resolveP2: any;
+      let p2 = new PromiseAPlus((resolve) => {
+        resolveP2 = resolve;
+      });
+      resolveP2({
+        then: ((onFulfilled: any) => {
+          onFulfilled(1);
+        })
+      });
+
+      return new Promise<void>((done) => {
+        p2.then((value) => {
+          expect(value).toBe(1);
+          done();
+        });
+      });
+    });
+  });
 });

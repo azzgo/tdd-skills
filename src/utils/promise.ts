@@ -43,17 +43,35 @@ export class PromiseAPlus<Value = any, Reason = any>
   constructor(
     executor: (resolve: Resolve<Value>, reject: Reject<Reason>) => void
   ) {
-    let resolve = (value: Value | Thenable) => {
-      this.#changeState(PromiseAPlusState.Fulfilled, value);
-    };
     let rejected = (reason: Reason) => {
       this.#changeState(PromiseAPlusState.Rejected, reason);
+    };
+    let resolve = (value: Value | Thenable) => {
+      try {
+        this.#changeState(PromiseAPlusState.Fulfilled, value);
+      } catch (e) {
+        rejected(e as Reason);
+      }
     };
     executor(resolve, rejected);
   }
 
   #changeState(state: PromiseAPlusState, result: Value | Reason | Thenable) {
     if (this[stateSymbol] !== PromiseAPlusState.Pending) {
+      return;
+    }
+    if (result === this) {
+      throw new TypeError("Chaining cycle detected");
+    }
+    if (isThenable(result)) {
+      (result as Thenable).then(
+        (value) => {
+          this.#changeState(PromiseAPlusState.Fulfilled, value);
+        },
+        (reason) => {
+          this.#changeState(PromiseAPlusState.Rejected, reason);
+        }
+      );
       return;
     }
     this[stateSymbol] = state;
