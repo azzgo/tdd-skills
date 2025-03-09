@@ -111,6 +111,28 @@ describe("PromiseAPlus impl", () => {
       });
     });
 
+    test('promise implementations to interoperate, as long as they expose a Promises/A+-compliant then method.', () => {
+      let p1 = new PromiseAPlus((resolve) => {
+        resolve(1);
+      });
+      let p2 = new Promise((resolve) => {
+        resolve(2);
+      });
+
+      return new Promise<void>((done) => {
+        p1.then((value) => {
+          expect(value).toBe(1);
+          return p2
+        }).then((value) => {
+          expect(value).toBe(2);
+          return p1
+        }).then((value) => {
+          expect(value).toBe(1);
+          done();
+        });
+      });
+    });
+
     test("onRejected must not be called until the execution context stack contains only platform code. ", () => {
       let promise = new PromiseAPlus((_, reject) => {
         reject(1);
