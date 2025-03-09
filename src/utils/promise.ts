@@ -99,7 +99,8 @@ export class PromiseAPlus<Value = any, Reason = any>
         }
         if (Object.is(this[stateSymbol], PromiseAPlusState.Rejected)) {
           if (typeof onRejected === "function") {
-            onRejected?.(this[resultSymbol] as Reason);
+            let result = onRejected?.(this[resultSymbol] as Reason);
+            resolve(result);
           } else {
             this[stateSymbol] === PromiseAPlusState.Rejected &&
               reject(this[resultSymbol] as Reason);
@@ -140,14 +141,23 @@ export class PromiseAPlus<Value = any, Reason = any>
     });
   }
 
-  // TODO: Implement finally
-  finally(onFinally: () => void) {
-    throw new Error("Not implemented");
+  finally(onFinally?: () => void) {
+    return this.then(
+      (value) => {
+        console.log("[DEBUG] ", value);
+        onFinally?.();
+        return value;
+      },
+      (reason) => {
+        console.log("[DEBUG] ", reason);
+        onFinally?.();
+        throw reason;
+      }
+    );
   }
 
-  // TODO: Implement catch
   catch(onRejected: OnRejected<Reason>) {
-    throw new Error("Not implemented");
+    return this.then(undefined, onRejected);
   }
 
   // TODO: Implement resolve

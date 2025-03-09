@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   PromiseAPlus,
   PromiseAPlusState,
@@ -111,7 +111,7 @@ describe("PromiseAPlus impl", () => {
       });
     });
 
-    test('promise implementations to interoperate, as long as they expose a Promises/A+-compliant then method.', () => {
+    test("promise implementations to interoperate, as long as they expose a Promises/A+-compliant then method.", () => {
       let p1 = new PromiseAPlus((resolve) => {
         resolve(1);
       });
@@ -122,14 +122,16 @@ describe("PromiseAPlus impl", () => {
       return new Promise<void>((done) => {
         p1.then((value) => {
           expect(value).toBe(1);
-          return p2
-        }).then((value) => {
-          expect(value).toBe(2);
-          return p1
-        }).then((value) => {
-          expect(value).toBe(1);
-          done();
-        });
+          return p2;
+        })
+          .then((value) => {
+            expect(value).toBe(2);
+            return p1;
+          })
+          .then((value) => {
+            expect(value).toBe(1);
+            done();
+          });
       });
     });
 
@@ -155,11 +157,16 @@ describe("PromiseAPlus impl", () => {
         reject("reason");
       });
       return new Promise<void>((done) => {
-        promise.then(undefined, (reason) => {
-          expect(promise[stateSymbol]).toBe(PromiseAPlusState.Rejected);
-          expect(reason).toBe("reason");
-          done();
-        });
+        promise
+          .then(undefined, (reason) => {
+            expect(promise[stateSymbol]).toBe(PromiseAPlusState.Rejected);
+            expect(reason).toBe("reason");
+            return "reason2";
+          })
+          .then((value) => {
+            expect(value).toBe("reason2");
+            done();
+          });
       });
     });
 
@@ -279,6 +286,52 @@ describe("PromiseAPlus impl", () => {
           done();
         });
       });
+    });
+  });
+});
+
+describe("ES6 Promise features", () => {
+  test(".catch", () => {
+    let p = new PromiseAPlus((_, reject) => {
+      reject(1);
+    });
+
+    return new Promise<void>((done) => {
+      p.then().catch((reason) => {
+        expect(reason).toBe(1);
+        done();
+      });
+    });
+  });
+
+  test(".finally", () => {
+    let p = new PromiseAPlus((resolve) => {
+      resolve(1);
+    });
+
+    let onFinished = vi.fn().mockImplementation(() => {});
+
+    return new Promise<void>((done) => {
+      p.then((value) => {
+        expect(value).toBe(1);
+        throw 2;
+      })
+        .catch((reason) => {
+          expect(reason).toBe(2);
+          return "catched";
+        })
+        .finally(onFinished)
+        .then((value) => {
+          expect(onFinished).toHaveBeenCalledOnce();
+          expect(value).toBe("catched");
+          return "thenable";
+        })
+        .finally(onFinished)
+        .then((value) => {
+          expect(onFinished).toHaveBeenCalledTimes(2);
+          expect(value).toBe("thenable");
+          done();
+        });
     });
   });
 });
