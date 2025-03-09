@@ -124,7 +124,7 @@ export class PromiseAPlus<Value = any, Reason = any>
     } else {
       setTimeout(cb, 0);
     }
-  }
+  };
 
   then(onFulfilled?: OnFulfilled<Value>, onRejected?: OnRejected<Reason>) {
     return new PromiseAPlus((resolve, reject) => {
@@ -138,5 +138,38 @@ export class PromiseAPlus<Value = any, Reason = any>
         this.#run();
       });
     });
+  }
+
+  // TODO: Implement finally
+  finally(onFinally: () => void) {
+    throw new Error("Not implemented");
+  }
+
+  // TODO: Implement catch
+  catch(onRejected: OnRejected<Reason>) {
+    throw new Error("Not implemented");
+  }
+
+  // TODO: Implement resolve
+  static resolve<Value>(value: Value | Thenable<Value>) {
+    throw new Error("Not implemented");
+  }
+
+  // TODO: Implement reject
+  static reject<Reason>(reason: Reason) {
+    throw new Error("Not implemented");
+  }
+
+  // TODO: Implement all
+  static all() {
+    throw new Error("Not implemented");
+  }
+  // TODO: Implement race
+  static race() {
+    throw new Error("Not implemented");
+  }
+  // TODO: Implement allSettled
+  static allSettled() {
+    throw new Error("Not implemented");
   }
 }
