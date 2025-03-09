@@ -111,15 +111,32 @@ export class PromiseAPlus<Value = any, Reason = any>
     }
   }
 
+  #nextTick = (cb: () => void) => {
+    if (typeof process === "object" && typeof process.nextTick === "function") {
+      process.nextTick(cb);
+    } else if (MutationObserver) {
+      let observer = new MutationObserver(cb);
+      let textNode = document.createTextNode("1");
+      observer.observe(textNode, {
+        characterData: true,
+      });
+      textNode.data = "2";
+    } else {
+      setTimeout(cb, 0);
+    }
+  }
+
   then(onFulfilled?: OnFulfilled<Value>, onRejected?: OnRejected<Reason>) {
     return new PromiseAPlus((resolve, reject) => {
       this.#handlers.push({
         resolve,
-        reject,
         onFulfilled,
+        reject,
         onRejected,
       });
-      this.#run();
+      this.#nextTick(() => {
+        this.#run();
+      });
     });
   }
 }

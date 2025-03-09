@@ -94,6 +94,40 @@ describe("PromiseAPlus impl", () => {
       });
     });
 
+    test("onRejected must not be called until the execution context stack contains only platform code. ", () => {
+      let promise = new PromiseAPlus((resolve) => {
+        resolve(1);
+      });
+      return new Promise<void>((done) => {
+        let onFulfilledCalled = false;
+        promise.then(() => {
+          onFulfilledCalled = true;
+        });
+        expect(onFulfilledCalled).toBe(false);
+        setTimeout(() => {
+          expect(onFulfilledCalled).toBe(true);
+          done();
+        });
+      });
+    });
+
+    test("onRejected must not be called until the execution context stack contains only platform code. ", () => {
+      let promise = new PromiseAPlus((_, reject) => {
+        reject(1);
+      });
+      return new Promise<void>((done) => {
+        let onRejectedCalled = false;
+        promise.then(undefined, () => {
+          onRejectedCalled = true;
+        });
+        expect(onRejectedCalled).toBe(false);
+        setTimeout(() => {
+          expect(onRejectedCalled).toBe(true);
+          done();
+        });
+      });
+    });
+
     test("If onRejected is a function, it must be called after promise is rejected, with promise’s reason as its first argument.", () => {
       let promise = new PromiseAPlus((_, reject) => {
         reject("reason");
@@ -212,9 +246,9 @@ describe("PromiseAPlus impl", () => {
         resolveP2 = resolve;
       });
       resolveP2({
-        then: ((onFulfilled: any) => {
+        then: (onFulfilled: any) => {
           onFulfilled(1);
-        })
+        },
       });
 
       return new Promise<void>((done) => {
