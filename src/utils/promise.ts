@@ -160,9 +160,13 @@ export class PromiseAPlus<Value = any, Reason = any>
     return this.then(undefined, onRejected);
   }
 
-  // TODO: Implement resolve
-  static resolve<Value>(value: Value | Thenable<Value>) {
-    throw new Error("Not implemented");
+  static resolve<Value>(value: Value | Thenable<Value> | PromiseAPlus | Promise): Thenable {
+    if (value instanceof PromiseAPlus || value instanceof Promise) {
+      return value;
+    }
+    return new PromiseAPlus((resolve) => {
+      resolve(value);
+    });
   }
 
   // TODO: Implement reject

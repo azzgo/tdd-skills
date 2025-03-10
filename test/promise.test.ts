@@ -334,4 +334,18 @@ describe("ES6 Promise features", () => {
         });
     });
   });
+
+  test("Promise.resolve", () => {
+    let p1 = new PromiseAPlus(() => {});
+
+    let p2 = PromiseAPlus.resolve(p1);
+    expect(p2).toBe(p1);
+
+    return new Promise<void>((done) => {
+      PromiseAPlus.resolve(1).then((value) => {
+        expect(value).toBe(1);
+        done()
+      });
+    });
+  });
 });
