@@ -19,8 +19,11 @@ const trackEvent = (effect: Effect, subs: Set<Effect>) => {
 };
 const trigger = (_subs: Set<Effect>) => {
   const effects = Array.from(_subs);
+  const activeEffect = effectStack.at(-1);
   for (const effect of effects) {
-    effect.execute();
+    if (activeEffect !== effect) {
+      effect.execute();
+    }
   }
 };
 
@@ -28,9 +31,9 @@ const useState = <T>(initialValue: T) => {
   let _state = initialValue;
   const _subs = new Set<Effect>();
   const getter = () => {
-    const effect = effectStack.at(-1);
-    if (effect) {
-      trackEvent(effect, _subs);
+    const activeEffect = effectStack.at(-1);
+    if (activeEffect) {
+      trackEvent(activeEffect, _subs);
     }
     return _state;
   };
