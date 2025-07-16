@@ -5,10 +5,14 @@
  **/
 type CleanUp = () => void;
 type Execute = () => CleanUp | void;
+type EffectOptions = {
+  scheduler: (fn: Execute) => void;
+};
 
 type Effect = {
   execute: Execute;
   deps: Set<Set<Effect>>;
+  opts?: Partial<EffectOptions>;
 };
 
 const effectStack: Effect[] = [];
@@ -22,7 +26,11 @@ const trigger = (_subs: Set<Effect>) => {
   const activeEffect = effectStack.at(-1);
   for (const effect of effects) {
     if (activeEffect !== effect) {
-      effect.execute();
+      if (effect.opts?.scheduler) {
+        effect.opts.scheduler(effect.execute);
+      } else {
+        effect.execute();
+      }
     }
   }
 };
@@ -46,14 +54,7 @@ const useState = <T>(initialValue: T) => {
   return [getter, setter] as const;
 };
 
-const _cleanup = (effect: Effect) => {
-  for (const subs of effect.deps) {
-    subs.delete(effect);
-  }
-  effect.deps.clear();
-};
-
-const useEffect = (fn: Execute) => {
+const useEffect = (fn: Execute, opts: Partial<EffectOptions> = {}) => {
   const execute = () => {
     _cleanup(effect);
     effectStack.push(effect);
@@ -67,10 +68,17 @@ const useEffect = (fn: Execute) => {
   const effect: Effect = {
     execute,
     deps: new Set(),
+    opts,
+  };
+
+  const _cleanup = (effect: Effect) => {
+    for (const subs of effect.deps) {
+      subs.delete(effect);
+    }
+    effect.deps.clear();
   };
 
   execute();
 };
 
-export { useState, useEffect }
-
+export { useState, useEffect };

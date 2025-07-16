@@ -36,4 +36,27 @@ describe("Reactive Data Test Case", () => {
     expect(count()).toEqual(2);
     expect(logger).toBeCalledTimes(1);
   });
+
+  test('user can schedule effect run', () => {
+    vi.useFakeTimers();
+    const [count, setCount] = useState(1);
+    const log = vi.fn();
+    
+    useEffect(() => {
+      log(count());
+    }, {
+      scheduler: (fn) => {
+        setTimeout(fn);
+      }
+    });
+    setCount(count() + 1);
+    log('end');
+
+    vi.advanceTimersByTime(1000);
+
+    expect(log).toBeCalledTimes(3);
+    expect(log.mock.calls.at(0)?.[0]).toEqual(1);
+    expect(log.mock.calls.at(1)?.[0]).toEqual('end');
+    expect(log.mock.calls.at(2)?.[0]).toEqual(2);
+  });
 });
