@@ -37,7 +37,7 @@ const trigger = (_subs: Set<Effect>) => {
   }
 };
 
-const useState = <T>(initialValue: T) => {
+const useState = <T>(initialValue?: T) => {
   let _state = initialValue;
   const _subs = new Set<Effect>();
   const getter = () => {
@@ -84,7 +84,7 @@ const useEffect = (fn: Execute, opts: Partial<EffectOptions> = {}) => {
 };
 
 const useMemo = <T>(getter: ComputedGetter<T>) => {
-  const [_value, _setValue] = useState<T>(getter());
+  const [_value, _setValue] = useState<T>();
 
   useEffect(() => {
     const value = getter();
