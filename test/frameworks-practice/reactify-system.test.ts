@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { describe, expect, test, vi } from "vitest";
-import { useEffect, useState } from "./reactify-system";
+import { useEffect, useState, useMemo } from "./reactify-system";
 
 describe("Reactive Data Test Case", () => {
   test("state getter should return latest updated value", () => {
@@ -23,7 +23,7 @@ describe("Reactive Data Test Case", () => {
     expect(logger).toBeCalledWith("current state is 2");
   });
 
-  test('useEffect should not trigger when getter and setter in the same effect', () => {
+  test("useEffect should not trigger when getter and setter in the same effect", () => {
     const [count, setCount] = useState(1);
     const logger = vi.fn();
 
@@ -37,26 +37,41 @@ describe("Reactive Data Test Case", () => {
     expect(logger).toBeCalledTimes(1);
   });
 
-  test('user can schedule effect run', () => {
+  test("user can schedule effect run", () => {
     vi.useFakeTimers();
     const [count, setCount] = useState(1);
     const log = vi.fn();
-    
-    useEffect(() => {
-      log(count());
-    }, {
-      scheduler: (fn) => {
-        setTimeout(fn);
-      }
-    });
+
+    useEffect(
+      () => {
+        log(count());
+      },
+      {
+        scheduler: (fn) => {
+          setTimeout(fn);
+        },
+      },
+    );
     setCount(count() + 1);
-    log('end');
+    log("end");
 
     vi.advanceTimersByTime(1000);
 
     expect(log).toBeCalledTimes(3);
     expect(log.mock.calls.at(0)?.[0]).toEqual(1);
-    expect(log.mock.calls.at(1)?.[0]).toEqual('end');
+    expect(log.mock.calls.at(1)?.[0]).toEqual("end");
     expect(log.mock.calls.at(2)?.[0]).toEqual(2);
+  });
+
+  test("useMemo should cached value via getter", () => {
+    const [count, setCount] = useState(1);
+    const memoizedValue = useMemo(() => {
+      return count() * 2;
+    });
+
+    expect(memoizedValue()).toEqual(2);
+    setCount(count() + 1);
+    expect(memoizedValue()).toEqual(4);
+    expect(memoizedValue()).toEqual(4);
   });
 });

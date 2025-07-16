@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * implements a reactive data structure similar to Vue's reactivity system.
  * Tracks data changes and triggers effects using `useState` and `useEffect` functions.
@@ -5,6 +6,7 @@
  **/
 type CleanUp = () => void;
 type Execute = () => CleanUp | void;
+type ComputedGetter<T> = () => T;
 type EffectOptions = {
   scheduler: (fn: Execute) => void;
 };
@@ -81,4 +83,17 @@ const useEffect = (fn: Execute, opts: Partial<EffectOptions> = {}) => {
   execute();
 };
 
-export { useState, useEffect };
+const useMemo = <T>(getter: ComputedGetter<T>) => {
+  const [_value, _setValue] = useState<T>(getter());
+
+  useEffect(() => {
+    const value = getter();
+    if (_value !== value) {
+      _setValue(value);
+    }
+  });
+
+  return _value as () => T;
+};
+
+export { useState, useEffect, useMemo };
