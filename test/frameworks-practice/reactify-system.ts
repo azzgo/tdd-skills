@@ -4,8 +4,7 @@
  * Tracks data changes and triggers effects using `useState` and `useEffect` functions.
  * Uses simple function getters and setters; avoids `Object.defineProperty`, `Reflect`, or `Proxy`.
  **/
-type CleanUp = () => void;
-type Execute = () => CleanUp | void;
+type Execute = () =>  unknown;
 type ComputedGetter<T> = () => T;
 type EffectOptions = {
   scheduler: (fn: Execute) => void;
@@ -45,7 +44,7 @@ const useState = <T>(initialValue?: T) => {
     if (activeEffect) {
       trackEvent(activeEffect, _subs);
     }
-    return _state;
+    return _state!;
   };
   const setter = (value: T) => {
     _state = value;
