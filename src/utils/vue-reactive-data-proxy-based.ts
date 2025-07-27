@@ -1,6 +1,11 @@
 export interface Effect {
   (): void;
   deps: Array<Set<Effect>>;
+  options: EffectOptions;
+}
+
+export interface EffectOptions {
+  scheduler?: (fn: Effect) => void
 }
 
 const bucket = new WeakMap<object, Map<PropertyKey, Set<Effect>>>();
@@ -37,7 +42,11 @@ const trigger = (
   const effects = Array.from(deps);
   effects.forEach((effect) => {
     if (typeof effect === "function" && effect !== activeEffect()) {
-      effect();
+      if (effect.options?.scheduler) {
+        effect.options.scheduler(effect);
+      } else {
+        effect();
+      }
     }
   });
 };
@@ -66,13 +75,14 @@ export const reactive = <T extends object>(target: T): T => {
   }) as T;
 };
 
-export const effect = (fn: () => void): void => {
+export const effect = (fn: () => void, opts = {}): void => {
   const effectFn: Effect = () => {
     cleanup(effectFn);
     effectStack.push(effectFn);
     fn();
     effectStack.pop();
   };
+  effectFn.options = opts;
   effectFn.deps = [];
   effectFn();
 };
