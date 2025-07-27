@@ -34,26 +34,26 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
       effect(() => {
         log(`Count is: ${data.count}`);
       });
-      (data as any).name = 'alice';
+      (data as any).name = "alice";
       expect(log).toBeCalledTimes(1);
       expect(log.mock.calls[0][0]).toBe("Count is: 0");
     });
 
-    test('effect update dependencies in every trigger', () => {
-      const data = reactive({ name: 'bob', ok: false });
+    test("effect update dependencies in every trigger", () => {
+      const data = reactive({ name: "bob", ok: false });
       const log = vi.fn();
       effect(() => {
-        log(data.ok ? 'loaded' : `Wait, ${data.name}`);
+        log(data.ok ? "loaded" : `Wait, ${data.name}`);
       });
       data.ok = true;
-      data.name = 'alice';
+      data.name = "alice";
       expect(log).toBeCalledTimes(2);
       expect(log.mock.calls[0][0]).toBe("Wait, bob");
       expect(log.mock.calls[1][0]).toBe("loaded");
     });
 
     test("effect can nest", () => {
-      const data = reactive({ count: 0, name: 'bob' });
+      const data = reactive({ count: 0, name: "bob" });
       const log = vi.fn();
       const nestLog = vi.fn();
       effect(() => {
@@ -62,7 +62,7 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
           nestLog(`Name is: ${data.name}`);
         });
       });
-      data.name = 'alice';
+      data.name = "alice";
       expect(log).toBeCalledTimes(1);
       expect(log.mock.calls[0][0]).toBe("Count is: 0");
       expect(nestLog).toBeCalledTimes(2);
@@ -73,6 +73,18 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
       expect(log).toBeCalledTimes(2);
       expect(log.mock.calls[1][0]).toBe("Count is: 1");
       expect(nestLog).toBeCalledTimes(3);
+    });
+
+    test("effect not trigger when getter and setter in same effect to avoid infinite trigger", () => {
+      const data = reactive({ count: 0, name: "bob" });
+      const log = vi.fn();
+      effect(() => {
+        data.count++;
+        log("effect triggered");
+      });
+
+      expect(data.count).toBe(1);
+      expect(log).toBeCalledTimes(1);
     });
 
     test.todo("effect runs when nested reactive data property changes");

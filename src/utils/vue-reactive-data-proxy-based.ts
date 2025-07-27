@@ -36,7 +36,7 @@ const trigger = (
   if (!deps) return;
   const effects = Array.from(deps);
   effects.forEach((effect) => {
-    if (typeof effect === "function") {
+    if (typeof effect === "function" && effect !== activeEffect()) {
       effect();
     }
   });
