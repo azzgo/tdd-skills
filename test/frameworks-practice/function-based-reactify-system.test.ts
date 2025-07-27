@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { describe, expect, test, vi } from "vitest";
-import { useEffect, useState, useMemo } from "./reactify-system";
+import { useEffect, useState, useMemo } from "@/utils/reactify-system-function-based";
 
 describe("Reactive Data Test Case", () => {
   test("state getter should return latest updated value", () => {
