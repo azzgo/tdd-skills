@@ -1,0 +1,82 @@
+export interface Effect {
+  (): void;
+  deps: Array<Set<Effect>>;
+}
+
+const bucket = new WeakMap<object, Map<PropertyKey, Set<Effect>>>();
+const effectStack: Effect[] = [];
+const activeEffect = () =>
+  effectStack.length > 0 ? effectStack[effectStack.length - 1] : null;
+
+const track = (target: object, prop: PropertyKey, receiver: unknown): void => {
+  let depsMap = bucket.get(target);
+  if (!depsMap) {
+    depsMap = new Map<PropertyKey, Set<Effect>>();
+    bucket.set(target, depsMap);
+  }
+  let deps = depsMap.get(prop);
+  if (!deps) {
+    deps = new Set<Effect>();
+    depsMap.set(prop, deps);
+  }
+  const effect = activeEffect();
+  if (effect) {
+    deps.add(effect);
+    effect.deps.push(deps);
+  }
+};
+const trigger = (
+  target: object,
+  prop: PropertyKey,
+  receiver: unknown,
+): void => {
+  const depsMap = bucket.get(target);
+  if (!depsMap) return;
+  const deps = depsMap.get(prop);
+  if (!deps) return;
+  const effects = Array.from(deps);
+  effects.forEach((effect) => {
+    if (typeof effect === "function") {
+      effect();
+    }
+  });
+};
+
+const cleanup = (effect: Effect): void => {
+  for (const deps of effect.deps) {
+    deps.delete(effect);
+  }
+  effect.deps.length = 0;
+};
+
+export const reactive = <T extends object>(target: T): T => {
+  return new Proxy(target, {
+    get(target, prop: PropertyKey, receiver: unknown) {
+      track(target, prop, receiver);
+      return Reflect.get(target, prop, receiver);
+    },
+    set(target, prop: PropertyKey, value: unknown, receiver: unknown): boolean {
+      const oldValue = Reflect.get(target, prop, receiver);
+      if (oldValue !== value) {
+        Reflect.set(target, prop, value, receiver);
+        trigger(target, prop, receiver);
+      }
+      return true;
+    },
+  }) as T;
+};
+
+export const effect = (fn: () => void): void => {
+  const effectFn: Effect = () => {
+    cleanup(effectFn);
+    effectStack.push(effectFn);
+    fn();
+    effectStack.pop();
+  };
+  effectFn.deps = [];
+  effectFn();
+};
+
+// @ts-expect-error 123
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const computed = <T>(fn: () => T): { value: T } => {};

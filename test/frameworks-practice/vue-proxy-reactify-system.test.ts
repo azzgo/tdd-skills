@@ -1,0 +1,90 @@
+import {
+  effect,
+  reactive,
+  computed,
+} from "@/utils/vue-reactive-data-proxy-based";
+import { describe, expect, test, vi } from "vitest";
+
+describe("Vue3 Mini Reactive Data Proxy System", () => {
+  describe("reactive", () => {
+    test("reactive reflects object updates", () => {
+      const obj = { a: 1 };
+      const proxy = reactive(obj);
+      proxy.a = 2;
+      expect(proxy.a).toBe(2);
+    });
+  });
+
+  describe("effect", () => {
+    test("effect runs when reactive data property changes", () => {
+      const data = reactive({ count: 0 });
+      const log = vi.fn();
+      effect(() => {
+        log(`Count is: ${data.count}`);
+      });
+      data.count++;
+      expect(log).toBeCalledTimes(2);
+      expect(log.mock.calls[0][0]).toBe("Count is: 0");
+      expect(log.mock.calls[1][0]).toBe("Count is: 1");
+    });
+
+    test("effect does not run when other reactive data property changes", () => {
+      const data = reactive({ count: 0 });
+      const log = vi.fn();
+      effect(() => {
+        log(`Count is: ${data.count}`);
+      });
+      (data as any).name = 'alice';
+      expect(log).toBeCalledTimes(1);
+      expect(log.mock.calls[0][0]).toBe("Count is: 0");
+    });
+
+    test('effect update dependencies in every trigger', () => {
+      const data = reactive({ name: 'bob', ok: false });
+      const log = vi.fn();
+      effect(() => {
+        log(data.ok ? 'loaded' : `Wait, ${data.name}`);
+      });
+      data.ok = true;
+      data.name = 'alice';
+      expect(log).toBeCalledTimes(2);
+      expect(log.mock.calls[0][0]).toBe("Wait, bob");
+      expect(log.mock.calls[1][0]).toBe("loaded");
+    });
+
+    test("effect can nest", () => {
+      const data = reactive({ count: 0, name: 'bob' });
+      const log = vi.fn();
+      const nestLog = vi.fn();
+      effect(() => {
+        log(`Count is: ${data.count}`);
+        effect(() => {
+          nestLog(`Name is: ${data.name}`);
+        });
+      });
+      data.name = 'alice';
+      expect(log).toBeCalledTimes(1);
+      expect(log.mock.calls[0][0]).toBe("Count is: 0");
+      expect(nestLog).toBeCalledTimes(2);
+      expect(nestLog.mock.calls[0][0]).toBe("Name is: bob");
+      expect(nestLog.mock.calls[1][0]).toBe("Name is: alice");
+
+      data.count++;
+      expect(log).toBeCalledTimes(2);
+      expect(log.mock.calls[1][0]).toBe("Count is: 1");
+      expect(nestLog).toBeCalledTimes(3);
+    });
+
+    test.todo("effect runs when nested reactive data property changes");
+  });
+
+  describe.skip("computed", () => {
+    test("computed value updates when source changes", () => {
+      let source = 1;
+      const result = computed(() => source * 2);
+      expect(result.value).toBe(2);
+      source = 3;
+      expect(result.value).toBe(2); // stub does not update
+    });
+  });
+});
