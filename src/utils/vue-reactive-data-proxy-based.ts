@@ -92,12 +92,23 @@ export const effect = <T>(fn: () => T, opts: EffectOptions = {}): Effect<T> => {
   return effectFn;
 };
 
-export const computed = <T>(fn: () => T): { readonly value: T } => {
-  const effectFn = effect(fn, { lazy: true });
+export const computed = <T>(getter: () => T): { readonly value: T } => {
+  let _value: T | undefined;
+  let dirty = true;
+  const effectFn = effect(getter, {
+    lazy: true,
+    scheduler: () => {
+      dirty = true;
+    },
+  });
   const obj = {
     get value() {
-      return effectFn();
-    }
+      if (dirty) {
+        _value = effectFn();
+        dirty = false;
+      }
+      return _value!;
+    },
   };
   return obj;
 };

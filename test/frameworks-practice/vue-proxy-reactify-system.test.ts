@@ -144,11 +144,26 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
 
   describe("computed", () => {
     test("computed value updates when source changes", () => {
-      let source = 1;
-      const result = computed(() => source * 2);
+      const sourceObj = reactive({ value: 1 });
+      const result = computed(() => sourceObj.value * 2);
       expect(result.value).toBe(2);
-      source = 3;
+      sourceObj.value = 3;
       expect(result.value).toBe(6); // stub does not update
+    });
+
+    test("computed function not run unless source is changed", () => {
+      const sourceObj = reactive({ value: 1 });
+      const log = vi.fn();
+      const result = computed(() => {
+        log("computed called");
+        return sourceObj.value * 2;
+      });
+      expect(result.value).toBe(2);
+      expect(result.value).toBe(2);
+      expect(log).toBeCalledTimes(1);
+      sourceObj.value = 3;
+      expect(result.value).toBe(6);
+      expect(log).toBeCalledTimes(2);
     });
   });
 });
