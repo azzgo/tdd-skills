@@ -98,7 +98,10 @@ export const computed = <T>(getter: () => T): { readonly value: T } => {
   const effectFn = effect(getter, {
     lazy: true,
     scheduler: () => {
-      dirty = true;
+      if (!dirty) {
+        dirty = true;
+        trigger(obj, 'value', obj);
+      }
     },
   });
   const obj = {
@@ -107,6 +110,7 @@ export const computed = <T>(getter: () => T): { readonly value: T } => {
         _value = effectFn();
         dirty = false;
       }
+      track(obj, 'value', obj);
       return _value!;
     },
   };

@@ -165,5 +165,22 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
       expect(result.value).toBe(6);
       expect(log).toBeCalledTimes(2);
     });
+
+    test("computed value can trigger effect", () => {
+      const sourceObj = reactive({ value: 1 });
+      const log = vi.fn();
+      const result = computed(() => {
+        return sourceObj.value * 2;
+      });
+      effect(() => {
+        log(`Computed value is: ${result.value}`);
+      });
+      expect(log).toBeCalledTimes(1);
+      expect(log.mock.calls[0][0]).toBe("Computed value is: 2");
+
+      sourceObj.value = 3;
+      expect(log).toBeCalledTimes(2);
+      expect(log.mock.calls[1][0]).toBe("Computed value is: 6");
+    });
   });
 });
