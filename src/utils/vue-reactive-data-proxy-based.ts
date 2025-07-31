@@ -5,7 +5,8 @@ export interface Effect {
 }
 
 export interface EffectOptions {
-  scheduler?: (fn: Effect) => void
+  scheduler?: (fn: Effect) => void;
+  lazy?: boolean;
 }
 
 const bucket = new WeakMap<object, Map<PropertyKey, Set<Effect>>>();
@@ -79,12 +80,16 @@ export const effect = (fn: () => void, opts = {}): void => {
   const effectFn: Effect = () => {
     cleanup(effectFn);
     effectStack.push(effectFn);
-    fn();
+    const result = fn();
     effectStack.pop();
+    return result;
   };
   effectFn.options = opts;
   effectFn.deps = [];
-  effectFn();
+  if (!opts.lazy) {
+    effectFn();
+  }
+  return effectFn;
 };
 
 // @ts-expect-error 123

@@ -123,6 +123,22 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
       });
     });
 
+    test("effect can execute lazy trigger by user", () => {
+      const data = reactive({ count: 0 });
+      const log = vi.fn();
+      const fn = effect(
+        () => {
+          log('triggered');
+          return Math.pow(data.count, 2);
+        },
+        { lazy: true },
+      );
+      expect(log).toBeCalledTimes(0);
+      expect(fn()).toEqual(0)
+      data.count++;
+      expect(log).toBeCalledTimes(2);
+    });
+
     test.todo("effect runs when nested reactive data property changes");
   });
 
