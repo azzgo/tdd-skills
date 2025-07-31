@@ -1,3 +1,4 @@
+import { deepClone } from "./deepClone";
 export interface Effect<T = unknown> {
   (): T;
   deps: Array<Set<Effect<T>>>;
@@ -8,7 +9,7 @@ export interface EffectOptions {
   scheduler?: (fn: Effect) => void;
   lazy?: boolean;
 }
-export type WatchCallback<T> = (newValue: T, oldValue: T) => void;
+export type WatchCallback<T> = (newValue: T, oldValue: T | undefined) => void;
 
 const bucket = new WeakMap<object, Map<PropertyKey, Set<Effect>>>();
 const effectStack: Effect[] = [];
@@ -60,7 +61,7 @@ const cleanup = (effect: Effect): void => {
   effect.deps.length = 0;
 };
 
-const traverse = (value: unknown, seen = new Set<unknown>()) => {
+const traverse = <T = unknown>(value: T, seen = new Set<unknown>()) => {
   if (typeof value !== "object" || value === null || seen.has(value)) {
     return value;
   }
@@ -142,21 +143,21 @@ export const computed = <T>(getter: () => T): { readonly value: T } => {
 };
 
 export const watch = <T>(source: T, cb: WatchCallback<T>): void => {
-  let getter: () => void;
+  let getter: () => T;
   if (typeof source === "function") {
-    getter = source as () => void;
+    getter = source as () => T;
   } else {
-    getter = () => {
-      traverse(source);
-    };
+    getter = () => traverse<T>(source);
   }
-  effect(
-    () => getter(),
-    {
-      scheduler: () => {
-        const newValue = source;
-        cb(newValue, newValue); // Assuming no old value for simplicity
-      },
+  let newValue: T | undefined;
+  let oldValue: T | undefined;
+  const effectFn = effect(() => getter(), {
+    lazy: true,
+    scheduler: () => {
+      newValue = effectFn();
+      cb(newValue, oldValue);
+      oldValue = deepClone(newValue);
     },
-  );
+  });
+  oldValue = deepClone(effectFn());
 };

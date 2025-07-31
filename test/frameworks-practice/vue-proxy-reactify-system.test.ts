@@ -4,7 +4,6 @@ import {
   computed,
   watch,
 } from "@/utils/vue-reactive-data-proxy-based";
-import { scheduler } from "timers/promises";
 import { describe, expect, test, vi } from "vitest";
 
 describe("Vue3 Mini Reactive Data Proxy System", () => {
@@ -206,6 +205,17 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
       sourceObj.value = 2;
       expect(log).toBeCalledTimes(1);
       expect(log.mock.calls[0][0]).toBe("Value changed");
+    });
+
+    test("watch will pass new value and old value to callback", () => {
+      const sourceObj = reactive({ value: 1 });
+      const log = vi.fn();
+      watch(sourceObj, (newValue, oldValue) => {
+        log(`Value changed from ${oldValue?.value} to ${newValue.value}`);
+      });
+      sourceObj.value = 2;
+      expect(log).toBeCalledTimes(1);
+      expect(log.mock.calls[0][0]).toBe("Value changed from 1 to 2");
     });
   });
 });
