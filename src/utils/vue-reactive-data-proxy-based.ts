@@ -9,7 +9,14 @@ export interface EffectOptions {
   scheduler?: (fn: Effect) => void;
   lazy?: boolean;
 }
-export type WatchCallback<T> = (newValue: T, oldValue: T | undefined) => void;
+export type WatchCallback<T> = (
+  newValue: T,
+  oldValue: T | undefined,
+  onInvalidate: (fn: () => void) => void,
+) => void;
+export interface WatchOptions {
+  immediate?: boolean;
+}
 
 const bucket = new WeakMap<object, Map<PropertyKey, Set<Effect>>>();
 const effectStack: Effect[] = [];
@@ -142,7 +149,11 @@ export const computed = <T>(getter: () => T): { readonly value: T } => {
   return obj;
 };
 
-export const watch = <T>(source: T, cb: WatchCallback<T>): void => {
+export const watch = <T>(
+  source: T,
+  cb: WatchCallback<T>,
+  opts: WatchOptions = {},
+): void => {
   let getter: () => T;
   if (typeof source === "function") {
     getter = source as () => T;
@@ -151,13 +162,28 @@ export const watch = <T>(source: T, cb: WatchCallback<T>): void => {
   }
   let newValue: T | undefined;
   let oldValue: T | undefined;
+  let cleanup: () => void;
+  const onInvalidate = (fn: () => void): void => {
+    cleanup = fn;
+  };
+
   const effectFn = effect(() => getter(), {
     lazy: true,
     scheduler: () => {
-      newValue = effectFn();
-      cb(newValue, oldValue);
-      oldValue = deepClone(newValue);
+      job();
     },
   });
-  oldValue = deepClone(effectFn());
+  const job = () => {
+    if (cleanup) {
+      cleanup();
+    }
+    newValue = effectFn();
+    cb(newValue, oldValue, onInvalidate);
+    oldValue = deepClone(newValue);
+  };
+  if (opts.immediate) {
+    job();
+  } else {
+    oldValue = deepClone(effectFn());
+  }
 };

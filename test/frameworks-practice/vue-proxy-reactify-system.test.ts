@@ -199,9 +199,12 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
     test("watch runs callback when getter deps changes", () => {
       const sourceObj = reactive({ value: 1 });
       const log = vi.fn();
-      watch(() => sourceObj.value, () => {
-        log(`Value changed`);
-      });
+      watch(
+        () => sourceObj.value,
+        () => {
+          log(`Value changed`);
+        },
+      );
       sourceObj.value = 2;
       expect(log).toBeCalledTimes(1);
       expect(log.mock.calls[0][0]).toBe("Value changed");
@@ -216,6 +219,50 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
       sourceObj.value = 2;
       expect(log).toBeCalledTimes(1);
       expect(log.mock.calls[0][0]).toBe("Value changed from 1 to 2");
+    });
+
+    test("watch can run immediately", () => {
+      const sourceObj = reactive({ value: 1 });
+      const log = vi.fn();
+      watch(
+        sourceObj,
+        (newValue, oldValue) => {
+          log(`Value changed from ${oldValue?.value} to ${newValue.value}`);
+        },
+        { immediate: true },
+      );
+      expect(log).toBeCalledTimes(1);
+      expect(log.mock.calls[0][0]).toBe("Value changed from undefined to 1");
+
+      sourceObj.value = 2;
+      expect(log).toBeCalledTimes(2);
+      expect(log.mock.calls[1][0]).toBe("Value changed from 1 to 2");
+    });
+
+    test("race watch callback can cancel previous callback", async () => {
+      const sourceObj = reactive({ value: 1 });
+      const log = vi.fn();
+      const p = Promise.resolve();
+      let result: string | undefined;
+      watch(sourceObj, (newValue, oldValue, onInvalidate) => {
+        let isExpired = false;
+        onInvalidate(() => {
+          isExpired = true;
+        });
+        p.then(() => {
+          if (!isExpired) {
+            log(`Value changed`);
+            result = `Value changed from ${oldValue?.value} to ${newValue.value}`;
+          }
+        });
+      });
+
+      sourceObj.value++;
+      sourceObj.value++;
+      await vi.waitFor(() => {
+        expect(log).toBeCalledTimes(1);
+        expect(result).toBe("Value changed from 2 to 3");
+      });
     });
   });
 });
