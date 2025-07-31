@@ -8,6 +8,7 @@ export interface EffectOptions {
   scheduler?: (fn: Effect) => void;
   lazy?: boolean;
 }
+export type WatchCallback<T> = (newValue: T, oldValue: T) => void;
 
 const bucket = new WeakMap<object, Map<PropertyKey, Set<Effect>>>();
 const effectStack: Effect[] = [];
@@ -59,6 +60,29 @@ const cleanup = (effect: Effect): void => {
   effect.deps.length = 0;
 };
 
+const traverse = (value: unknown, seen = new Set<unknown>()) => {
+  if (typeof value !== "object" || value === null || seen.has(value)) {
+    return value;
+  }
+  seen.add(value);
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      traverse(item, seen);
+    }
+  } else if (value instanceof Map || value instanceof Set) {
+    for (const item of value) {
+      traverse(item, seen);
+    }
+  } else if (value instanceof Object) {
+    for (const key in value) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) {
+        traverse(Reflect.get(value, key, value), seen);
+      }
+    }
+  }
+  return value;
+};
+
 export const reactive = <T extends object>(target: T): T => {
   return new Proxy(target, {
     get(target, prop: PropertyKey, receiver: unknown) {
@@ -100,7 +124,7 @@ export const computed = <T>(getter: () => T): { readonly value: T } => {
     scheduler: () => {
       if (!dirty) {
         dirty = true;
-        trigger(obj, 'value', obj);
+        trigger(obj, "value", obj);
       }
     },
   });
@@ -110,9 +134,29 @@ export const computed = <T>(getter: () => T): { readonly value: T } => {
         _value = effectFn();
         dirty = false;
       }
-      track(obj, 'value', obj);
+      track(obj, "value", obj);
       return _value!;
     },
   };
   return obj;
+};
+
+export const watch = <T>(source: T, cb: WatchCallback<T>): void => {
+  let getter: () => void;
+  if (typeof source === "function") {
+    getter = source as () => void;
+  } else {
+    getter = () => {
+      traverse(source);
+    };
+  }
+  effect(
+    () => getter(),
+    {
+      scheduler: () => {
+        const newValue = source;
+        cb(newValue, newValue); // Assuming no old value for simplicity
+      },
+    },
+  );
 };

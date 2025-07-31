@@ -2,6 +2,7 @@ import {
   effect,
   reactive,
   computed,
+  watch,
 } from "@/utils/vue-reactive-data-proxy-based";
 import { scheduler } from "timers/promises";
 import { describe, expect, test, vi } from "vitest";
@@ -128,13 +129,13 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
       const log = vi.fn();
       const fn = effect(
         () => {
-          log('triggered');
+          log("triggered");
           return Math.pow(data.count, 2);
         },
         { lazy: true },
       );
       expect(log).toBeCalledTimes(0);
-      expect(fn()).toEqual(0)
+      expect(fn()).toEqual(0);
       data.count++;
       expect(log).toBeCalledTimes(2);
     });
@@ -181,6 +182,30 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
       sourceObj.value = 3;
       expect(log).toBeCalledTimes(2);
       expect(log.mock.calls[1][0]).toBe("Computed value is: 6");
+    });
+  });
+
+  describe("watch", () => {
+    test("watch runs callback when source changes", () => {
+      const sourceObj = reactive({ value: 1 });
+      const log = vi.fn();
+      watch(sourceObj, () => {
+        log(`Value changed`);
+      });
+      sourceObj.value = 2;
+      expect(log).toBeCalledTimes(1);
+      expect(log.mock.calls[0][0]).toBe("Value changed");
+    });
+
+    test("watch runs callback when getter deps changes", () => {
+      const sourceObj = reactive({ value: 1 });
+      const log = vi.fn();
+      watch(() => sourceObj.value, () => {
+        log(`Value changed`);
+      });
+      sourceObj.value = 2;
+      expect(log).toBeCalledTimes(1);
+      expect(log.mock.calls[0][0]).toBe("Value changed");
     });
   });
 });
