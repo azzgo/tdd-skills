@@ -1,6 +1,6 @@
-export interface Effect {
-  (): void;
-  deps: Array<Set<Effect>>;
+export interface Effect<T = unknown> {
+  (): T;
+  deps: Array<Set<Effect<T>>>;
   options: EffectOptions;
 }
 
@@ -76,8 +76,8 @@ export const reactive = <T extends object>(target: T): T => {
   }) as T;
 };
 
-export const effect = (fn: () => void, opts = {}): void => {
-  const effectFn: Effect = () => {
+export const effect = <T>(fn: () => T, opts: EffectOptions = {}): Effect<T> => {
+  const effectFn: Effect<T> = () => {
     cleanup(effectFn);
     effectStack.push(effectFn);
     const result = fn();
@@ -92,6 +92,12 @@ export const effect = (fn: () => void, opts = {}): void => {
   return effectFn;
 };
 
-// @ts-expect-error 123
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const computed = <T>(fn: () => T): { value: T } => {};
+export const computed = <T>(fn: () => T): { readonly value: T } => {
+  const effectFn = effect(fn, { lazy: true });
+  const obj = {
+    get value() {
+      return effectFn();
+    }
+  };
+  return obj;
+};

@@ -142,13 +142,13 @@ describe("Vue3 Mini Reactive Data Proxy System", () => {
     test.todo("effect runs when nested reactive data property changes");
   });
 
-  describe.skip("computed", () => {
+  describe("computed", () => {
     test("computed value updates when source changes", () => {
       let source = 1;
       const result = computed(() => source * 2);
       expect(result.value).toBe(2);
       source = 3;
-      expect(result.value).toBe(2); // stub does not update
+      expect(result.value).toBe(6); // stub does not update
     });
   });
 });
