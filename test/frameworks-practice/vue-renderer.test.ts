@@ -36,12 +36,38 @@ describe("Vue Renderer", () => {
         ],
       };
       renderer.render(vnode, document.body);
-      console.log("🚀 file:vue-renderer.test.ts-line:38 ", document.body.childNodes.length);
       const appElement = document.body.childNodes[0] as HTMLElement;
       expect(appElement).toBeDefined();
       expect(appElement.childNodes.length).toBe(2);
       expect(appElement.childNodes[0].textContent).toBe("First paragraph");
       expect(appElement.childNodes[1].textContent).toBe("Second paragraph");
+    });
+
+    test('mount node with attributes', () => {
+      const renderer = createRenderer();
+      const vnode = {
+        type: "div",
+        props: { id: "test", class: "container" },
+      };
+      renderer.render(vnode, document.body);
+      const appElement = document.body.childNodes[0] as HTMLElement;
+      expect(appElement).toBeDefined();
+      expect(appElement.id).toBe("test");
+      expect(appElement.className).toBe("container");
+    });
+
+    test('mount node with attributes and properties', () => {
+      const renderer = createRenderer();
+      const vnode = {
+        type: "input",
+        props: { type: "text", value: "Hello", disabled: false },
+      };
+      renderer.render(vnode, document.body);
+      const appElement = document.body.childNodes[0] as HTMLInputElement;
+      expect(appElement).toBeDefined();
+      expect(appElement.type).toBe("text");
+      expect(appElement.value).toBe("Hello");
+      expect(appElement.disabled).toBe(false);
     });
   });
 });

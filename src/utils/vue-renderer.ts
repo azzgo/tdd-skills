@@ -11,12 +11,31 @@ const rendererOptions = {
   setElementText: (el, text) => {
     el.textContent = text;
   },
+  patchProps: (el, key, prevValue, nextValue) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const shouldSetAsProp = (el, key, value) => {
+      // for property that is readonly, should not set dom property, this is only one case here
+      if (key === "form" && el.tagName === "INPUT") return false;
+      return key in el;
+    };
+    if (shouldSetAsProp(el, key, nextValue)) {
+      const propType = typeof el[key];
+      if (propType === "boolean" && nextValue === "") {
+        el[key] = true;
+      } else {
+        el[key] = nextValue;
+      }
+    } else {
+      el.setAttribute(key, nextValue);
+    }
+  },
 };
 
 export const createRenderer = ({
   createElement,
   insert,
   setElementText,
+  patchProps,
 } = rendererOptions) => {
   const mountElement = (vnode, container) => {
     const el = createElement(vnode.type);
@@ -26,6 +45,11 @@ export const createRenderer = ({
       vnode.children.forEach((child) => {
         patch(null, child, el);
       });
+    }
+    if (vnode.props) {
+      for (const key in vnode.props) {
+        patchProps(el, key, null, vnode.props[key]);
+      }
     }
     insert(el, container);
   };
