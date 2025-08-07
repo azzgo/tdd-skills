@@ -43,7 +43,7 @@ describe("Vue Renderer", () => {
       expect(appElement.childNodes[1].textContent).toBe("Second paragraph");
     });
 
-    test('mount node with attributes', () => {
+    test("mount node with attributes", () => {
       const renderer = createRenderer();
       const vnode = {
         type: "div",
@@ -56,7 +56,7 @@ describe("Vue Renderer", () => {
       expect(appElement.className).toBe("container");
     });
 
-    test('mount node with attributes and properties', () => {
+    test("mount node with attributes and properties", () => {
       const renderer = createRenderer();
       const vnode = {
         type: "input",
@@ -69,5 +69,11 @@ describe("Vue Renderer", () => {
       expect(appElement.value).toBe("Hello");
       expect(appElement.disabled).toBe(false);
     });
+
+    test.todo("enhanced class prop");
+  });
+
+  describe("patchElement", () => {
+    test.todo('should umount when need');
   });
 });

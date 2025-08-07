@@ -18,7 +18,10 @@ const rendererOptions = {
       if (key === "form" && el.tagName === "INPUT") return false;
       return key in el;
     };
-    if (shouldSetAsProp(el, key, nextValue)) {
+    if (/^on/.test(key)) {
+      // TODO: 处理事件
+    }
+    else if (shouldSetAsProp(el, key, nextValue)) {
       const propType = typeof el[key];
       if (propType === "boolean" && nextValue === "") {
         el[key] = true;
@@ -38,7 +41,7 @@ export const createRenderer = ({
   patchProps,
 } = rendererOptions) => {
   const mountElement = (vnode, container) => {
-    const el = createElement(vnode.type);
+    const el = (vnode.el = createElement(vnode.type));
     if (typeof vnode.children === "string") {
       setElementText(el, vnode.children);
     } else if (Array.isArray(vnode.children)) {
@@ -53,16 +56,35 @@ export const createRenderer = ({
     }
     insert(el, container);
   };
+  const unmount = (vnode) => {
+    const parent = vnode?.el?.parentNode;
+    if (parent) {
+      parent.removeChild(vnode.el);
+    }
+  };
   /**
    * @param {Object} n1 - The old virtual node.
    * @param {Object} n2 - The new virtual node.
    * @param {HTMLElement} container - The container to render into.
    **/
   const patch = (n1, n2, container) => {
-    if (!n1) {
-      mountElement(n2, container);
-    } else {
-      // TODO: n1 exists, update logic here
+    if (n1 && n1.type !== n2.type) {
+      umount(n1);
+      n1 = null;
+    }
+    switch (typeof n2.type) {
+      // string 说明是普通 HTML 标签
+      case "string":
+        if (!n1) {
+          mountElement(n2, container);
+        } else {
+          // TODO: n1 exists, update logic here
+        }
+        break;
+      case 'object':
+        // TODO: 说明是组件
+      default:
+        return;
     }
   };
   const render = (vnode, container) => {
@@ -71,7 +93,7 @@ export const createRenderer = ({
       patch(container._vnode, vnode, container);
     } else {
       if (container._vnode) {
-        container.innerHTML = "";
+        unmount(container._vnode);
       }
     }
     container._vnode = vnode;
