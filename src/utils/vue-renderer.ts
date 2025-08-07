@@ -11,7 +11,7 @@ const rendererOptions = {
   setElementText: (el, text) => {
     el.textContent = text;
   },
-  patchProps: (el, key, prevValue, nextValue) => {
+  patchProps: (el: HTMLElement, key, prevValue, nextValue) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const shouldSetAsProp = (el, key, value) => {
       // for property that is readonly, should not set dom property, this is only one case here
@@ -19,9 +19,14 @@ const rendererOptions = {
       return key in el;
     };
     if (/^on/.test(key)) {
-      // TODO: 处理事件
-    }
-    else if (shouldSetAsProp(el, key, nextValue)) {
+      const eventName = key.slice(2).toLowerCase();
+      // 绑定事件前，移除旧事件
+      if (prevValue) {
+        el.removeEventListener(eventName, prevValue);
+      }
+      // 绑定事件
+      el.addEventListener(eventName, nextValue);
+    } else if (shouldSetAsProp(el, key, nextValue)) {
       const propType = typeof el[key];
       if (propType === "boolean" && nextValue === "") {
         el[key] = true;
@@ -81,8 +86,8 @@ export const createRenderer = ({
           // TODO: n1 exists, update logic here
         }
         break;
-      case 'object':
-        // TODO: 说明是组件
+      case "object":
+      // TODO: 说明是组件
       default:
         return;
     }
