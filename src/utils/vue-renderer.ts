@@ -20,24 +20,24 @@ const rendererOptions = {
     if (/^on/.test(key)) {
       const eventName = key.slice(2).toLowerCase();
       // 代理，避免频繁 dom 操作的性能开销
-      const invokers = el._vei || (el._vei = {}) // vue event invoker
-      let invoker = invokers[key]
+      const invokers = el._vei || (el._vei = {}); // vue event invoker
+      let invoker = invokers[key];
       // 绑定事件前，移除旧事件
       if (nextValue) {
         if (!invoker) {
-          invoker = el._vei[key] =  (e) => {
+          invoker = el._vei[key] = (e) => {
             // 这里是预防事件冒泡机制导致的预料外的执行
             if (e.timeStamp < invoker.attached) return;
             // 这里是允许 props 中出现 `onClick={[() => alert(1), () => alert(2)]}` 的绑定
             if (Array.isArray(invoker.value)) {
-              invoker.forEach(fn => fn(e));
+              invoker.forEach((fn) => fn(e));
             } else {
               invoker.value(e);
             }
           };
           invoker.value = nextValue;
           invoker.attached = Performance.now();
-          el.addEventListener(eventName, invoker)
+          el.addEventListener(eventName, invoker);
         } else {
           // 性能提升点，避免频繁卸载和挂在 dom 的性能开销，因为纯 JS 执行性能比 DOM API 更优
           invoker.value = nextValue;
@@ -53,7 +53,11 @@ const rendererOptions = {
         el[key] = nextValue;
       }
     } else {
-      el.setAttribute(key, nextValue);
+      if (nextValue) {
+        el.setAttribute(key, nextValue);
+      } else {
+        el.removeAttribute(key);
+      }
     }
   },
 };
@@ -80,6 +84,48 @@ export const createRenderer = ({
     }
     insert(el, container);
   };
+
+  const patchElement = (n1, n2) => {
+    const el = (n2.el = n1.el);
+    const oldProps = n1.props;
+    const newProps = n2.props;
+    for (const key in newProps) {
+      if (newProps[key] !== oldProps[key]) {
+        patchProps(el, key, oldProps[key], newProps[key]);
+      }
+    }
+
+    for (const key in oldProps) {
+      if (!(key in newProps)) {
+        patchProps(el, key, oldProps[key], null);
+      }
+    }
+
+    patchChildren(n1, n2, el);
+  };
+
+  const patchChildren = (n1, n2, el) => {
+    if (typeof n2.children === "string") {
+      if (Array.isArray(n1.children)) {
+        n1.children.forEach((c) => unmount(c));
+      }
+      setElementText(el, n1.children);
+    } else if (Array.isArray(n2, children)) {
+      if (Array.isArray(n1, children)) {
+        // TODO: diff here
+      } else {
+        setElementText(el, "");
+        n2.children.forEach((c) => patch(null, c, el));
+      }
+    } else {
+      if (Array.isArray(n1.children)) {
+        n1.children.forEach((c) => unmount(c));
+      } else if (typeof n1.children === "string") {
+        setElementText(el, "");
+      }
+    }
+  };
+
   const unmount = (vnode) => {
     const parent = vnode?.el?.parentNode;
     if (parent) {
@@ -102,11 +148,12 @@ export const createRenderer = ({
         if (!n1) {
           mountElement(n2, container);
         } else {
-          // TODO: n1 exists, update logic here
+          patchElement(n1, n2);
         }
         break;
       case "object":
-      // TODO: 说明是组件
+        // TODO: 说明是组件
+        break;
       default:
         return;
     }
