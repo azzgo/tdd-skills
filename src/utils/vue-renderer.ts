@@ -12,7 +12,6 @@ const rendererOptions = {
     el.textContent = text;
   },
   patchProps: (el: HTMLElement, key, prevValue, nextValue) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const shouldSetAsProp = (el, key, value) => {
       // for property that is readonly, should not set dom property, this is only one case here
       if (key === "form" && el.tagName === "INPUT") return false;
@@ -20,12 +19,32 @@ const rendererOptions = {
     };
     if (/^on/.test(key)) {
       const eventName = key.slice(2).toLowerCase();
+      // 代理，避免频繁 dom 操作的性能开销
+      const invokers = el._vei || (el._vei = {}) // vue event invoker
+      let invoker = invokers[key]
       // 绑定事件前，移除旧事件
-      if (prevValue) {
-        el.removeEventListener(eventName, prevValue);
+      if (nextValue) {
+        if (!invoker) {
+          invoker = el._vei[key] =  (e) => {
+            // 这里是预防事件冒泡机制导致的预料外的执行
+            if (e.timeStamp < invoker.attached) return;
+            // 这里是允许 props 中出现 `onClick={[() => alert(1), () => alert(2)]}` 的绑定
+            if (Array.isArray(invoker.value)) {
+              invoker.forEach(fn => fn(e));
+            } else {
+              invoker.value(e);
+            }
+          };
+          invoker.value = nextValue;
+          invoker.attached = Performance.now();
+          el.addEventListener(eventName, invoker)
+        } else {
+          // 性能提升点，避免频繁卸载和挂在 dom 的性能开销，因为纯 JS 执行性能比 DOM API 更优
+          invoker.value = nextValue;
+        }
+      } else if (invoker) {
+        el.removeEventListener(eventName, invoker);
       }
-      // 绑定事件
-      el.addEventListener(eventName, nextValue);
     } else if (shouldSetAsProp(el, key, nextValue)) {
       const propType = typeof el[key];
       if (propType === "boolean" && nextValue === "") {
