@@ -2,6 +2,7 @@
 // @ts-nocheck
 
 const Text = Symbol();
+const Fragment = Symbol();
 
 const rendererOptions = {
   createElement: (type) => {
@@ -138,6 +139,9 @@ export const createRenderer = ({
   };
 
   const unmount = (vnode) => {
+    if (vnode.type === Fragment) {
+      vnode.children.forEach((c) => unmount(c));
+    }
     const parent = vnode?.el?.parentNode;
     if (parent) {
       parent.removeChild(vnode.el);
@@ -171,6 +175,13 @@ export const createRenderer = ({
           if (n2.children !== n1.children) {
             setText(el, n2.children);
           }
+        }
+        break;
+      case Fragment:
+        if (!n1) {
+          n2.children.forEach((c) => patch(null, n2, container));
+        } else {
+          patchChildren(n1, n2, container);
         }
         break;
       case "object":
