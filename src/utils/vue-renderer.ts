@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 
+const Text = Symbol();
+
 const rendererOptions = {
   createElement: (type) => {
     return document.createElement(type);
@@ -10,6 +12,12 @@ const rendererOptions = {
   },
   setElementText: (el, text) => {
     el.textContent = text;
+  },
+  createText(text) {
+    return document.createTextNode(text);
+  },
+  setText(el, text) {
+    el.nodeValue = text;
   },
   patchProps: (el: HTMLElement, key, prevValue, nextValue) => {
     const shouldSetAsProp = (el, key, value) => {
@@ -64,6 +72,8 @@ const rendererOptions = {
 
 export const createRenderer = ({
   createElement,
+  createText,
+  setText,
   insert,
   setElementText,
   patchProps,
@@ -74,6 +84,7 @@ export const createRenderer = ({
       setElementText(el, vnode.children);
     } else if (Array.isArray(vnode.children)) {
       vnode.children.forEach((child) => {
+        // TODO: 这里假设了 children 中的每一项都是 vnode, 没有处理 [{ type: 'h1' ...}, 'Hello'] 这种场景中的字符串项
         patch(null, child, el);
       });
     }
@@ -149,6 +160,17 @@ export const createRenderer = ({
           mountElement(n2, container);
         } else {
           patchElement(n1, n2);
+        }
+        break;
+      case Text:
+        if (!n1) {
+          const el = n2.el = createText(n2.children);
+          insert(el, container)
+        } else {
+          const el = n2.el = n1.el;
+          if (n2.children !== n1.children) {
+            setText(el, n2.children);
+          }
         }
         break;
       case "object":
