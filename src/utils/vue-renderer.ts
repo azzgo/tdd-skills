@@ -128,7 +128,8 @@ export const createRenderer = ({
       setElementText(container, n2.children);
     } else if (Array.isArray(n2.children)) {
       if (Array.isArray(n1.children)) {
-        simpleDiffAlgorithm();
+        doubleEndDiffAlgorithm(n1, n2, container);
+        // simpleDiffAlgorithm(n1, n2, container)
       } else {
         setElementText(container, "");
         n2.children.forEach((c) => patch(null, c, container));
@@ -141,7 +142,7 @@ export const createRenderer = ({
       }
     }
 
-    function simpleDiffAlgorithm() {
+    function simpleDiffAlgorithm(n1, n2, container) {
       const oldChildren = n1.children;
       const newChildren = n2.children;
       let lastMaxIndex = 0;
@@ -184,6 +185,84 @@ export const createRenderer = ({
         const has = newChildren.find((vnode) => vnode.key === oldNode.key);
         if (!has) {
           unmount(oldNode);
+        }
+      }
+    }
+
+    function doubleEndDiffAlgorithm(n1, n2, container) {
+      const oldChildren = n1.children;
+      const newChildren = n2.children;
+      let oldStartIdx = 0,
+        oldEndIdx = oldChildren.length - 1,
+        newStartIdx = 0,
+        newEndIdx = newChildren.length - 1;
+      let oldStartNode = oldChildren[oldStartIdx],
+        oldEndNode = oldChildren[oldEndIdx],
+        newStartNode = newChildren[newStartIdx],
+        newEndNode = newChildren[newEndIdx];
+      while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+        if (!oldStartNode) {
+          // 跳过标记已处理的节点
+          oldStartNode = oldChildren[++oldStartIdx];
+        } else if (!oldEndNode) {
+          // 跳过标记已处理的节点
+          oldEndNode = oldChildren[--oldEndIdx];
+        } else if (oldStartNode.key === newStartNode.key) {
+          // 先更新对应节点
+          patch(oldStartNode, newStartNode, container);
+          // 都在开头，不需要移动
+          oldStartNode = oldChildren[++oldStartIdx];
+          newStartNode = newChildren[++newStartIdx];
+        } else if (oldEndNode.key === newEndNode.key) {
+          // 先更新对应节点
+          patch(oldEndNode, newEndNode);
+          // 都在结尾，不需要移动
+          oldEndNode = oldChildren[--oldEndIdx];
+          newEndNode = newChildren[--newEndIdx];
+        } else if (oldStartNode.key === newEndNode.key) {
+          patch(oldStartNode, newEndNode, container);
+          // 将节点插入最后
+          insert(oldStartNode.el, container, oldEndNode.el.nextSibling);
+          oldStartNode = oldChildren[++oldStartIdx];
+          newEndNode = newChildren[--newEndIdx];
+        } else if (oldEndNode.key === newStartNode.key) {
+          // 先更新对应节点
+          patch(oldEndNode, newStartNode, container);
+          // 将节点插入最开始的位置
+          insert(oldEndNode.el, container, oldStartNode.el);
+          oldEndNode = oldChildren[--oldEndIdx];
+          newStartNode = newChildren[++newStartIdx];
+        } else {
+          // 处理非理想情况
+          const idxInOld = oldChildren.findIndex(
+            // ?. 是因为会使用 undefined 做处理标记
+            (vnode) => vnode?.key === newStartNode.key,
+          );
+          if (idxInOld > 0) {
+            const vnodeToMove = oldChildren[idxInOld];
+            patch(vnodeToMove, newStartNode, container);
+            insert(vnodeToMove.el, container, oldStartNode.el);
+            // 标记，表明处理过这个节点，后面循环需要跳过这个节点位置
+            oldChildren[idxInOld] = undefined;
+          } else {
+            // 说明是新增元素，创建元素，并挂在在指针的开头
+            patch(null, newStartNode, container, oldStartNode.el);
+          }
+          newStartNode = newChildren[++newStartIdx];
+        }
+      }
+
+      // 说明剩余未遍历元素是新增元素
+      if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
+        for (let i = newStartIdx; i <= newEndIdx; i++) {
+          patch(null, newChildren[i], container, oldStartNode.el);
+        }
+      } // 说明剩余未遍历元素是移除元素
+      else if (newEndIdx < newStartIdx && oldStartIdx <= oldEndIdx) {
+        for (let i = oldStartIdx; i <= oldEndIdx; i++) {
+          if (oldChildren[i]) {
+            unmount(oldChildren[i]);
+          }
         }
       }
     }
