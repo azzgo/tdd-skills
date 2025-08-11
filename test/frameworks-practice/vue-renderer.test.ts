@@ -74,6 +74,73 @@ describe("Vue Renderer", () => {
   });
 
   describe("patchElement", () => {
-    test.todo('should umount when need');
+    test.todo("should umount when need");
+
+    test.only("diff algorithm", () => {
+      const first_vnode = {
+        type: "div",
+        children: [
+          {
+            type: "p",
+            key: "A",
+            children: "1",
+          },
+          {
+            type: "p",
+            key: "B",
+            children: "2",
+          },
+          {
+            type: "p",
+            key: "C",
+            children: "3",
+          },
+          {
+            type: "p",
+            key: "D",
+            children: "4",
+          },
+          {
+            type: "p",
+            key: "E",
+            children: "5",
+          },
+        ],
+      };
+      const updated_vnode = {
+        type: "div",
+        children: [
+          {
+            type: "p",
+            key: "A",
+            children: "11",
+          },
+          {
+            type: "p",
+            key: "C",
+            children: "31",
+          },
+          {
+            type: "p",
+            key: "F",
+            children: "f1",
+          },
+          {
+            type: "p",
+            key: "D",
+            children: "41",
+          },
+          {
+            type: "p",
+            key: "G",
+            children: "g1",
+          },
+        ],
+      };
+      const renderer = createRenderer();
+      renderer.render(first_vnode, document.body);
+      renderer.render(updated_vnode, document.body);
+      expect(document.body).toMatchSnapshot();
+    });
   });
 });
