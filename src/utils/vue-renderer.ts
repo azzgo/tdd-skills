@@ -333,38 +333,37 @@ export const createRenderer = ({
               patched++;
               // 构建 source 数组，用来寻找最长递增子序列
               source[k - newStartIndex] = i;
-              console.log("🚀 file:vue-renderer.ts-line:336 ", i, k, pos);
               // 判断是否有节点移动
-              if (i < pos) {
+              if (k < pos) {
                 moved = true;
               } else {
-                pos = i;
+                pos = k;
               }
             }
           } else {
             unmount(oldNode);
           }
         }
-        if (moved) {
-          const seq = listToSequence(source);
-          let s = seq.length - 1;
-          let i = count - 1;
-          for (; i >= 0; i--) {
-            if (source[i] === -1) {
-              const pos = i + newStartIndex;
-              const newNode = newChildren[pos];
-              const anchor =
-                pos + 1 < newChildren.length ? newChildren[pos + 1].el : null;
-              patch(null, newNode, container, anchor);
-            } else if (i !== seq[s]) {
-              const pos = i + newStartIndex;
-              const newNode = newChildren[pos];
-              const anchor =
-                pos + 1 < newChildren.length ? newChildren[pos + 1].el : null;
-              insert(newNode.el, container, anchor);
-            } else {
-              s--;
-            }
+        const seq = listToSequence(source);
+        let s = seq.length - 1;
+        let i = count - 1;
+        for (; i >= 0; i--) {
+          if (source[i] === -1) {
+            const pos = i + newStartIndex;
+            const newNode = newChildren[pos];
+            const anchor =
+              pos + 1 < newChildren.length ? newChildren[pos + 1].el : null;
+            patch(null, newNode, container, anchor);
+          } else if (moved && i !== seq[s]) {
+            // 说明不在最长递增子序列中，需要移动, 不过这里通过 moved 标记来判断是否需要移动,减少判断逻辑
+            const pos = i + newStartIndex;
+            const newNode = newChildren[pos];
+            const anchor =
+              pos + 1 < newChildren.length ? newChildren[pos + 1].el : null;
+            insert(newNode.el, container, anchor);
+          } else {
+            // 说明在最长递增子序列中，不需要移动
+            s--;
           }
         }
       }

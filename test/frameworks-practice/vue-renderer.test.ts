@@ -76,7 +76,7 @@ describe("Vue Renderer", () => {
   describe("patchElement", () => {
     test.todo("should umount when need");
 
-    test.only("diff algorithm", () => {
+    test("diff algorithm", () => {
       const first_vnode = {
         type: "div",
         children: [
