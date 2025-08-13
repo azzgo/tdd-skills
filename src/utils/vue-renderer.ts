@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 
+import { listToSequence } from "./utils";
+
 const Text = Symbol();
 const Fragment = Symbol();
 
@@ -128,7 +130,8 @@ export const createRenderer = ({
       setElementText(container, n2.children);
     } else if (Array.isArray(n2.children)) {
       if (Array.isArray(n1.children)) {
-        doubleEndDiffAlgorithm(n1, n2, container);
+        quickDiffAlgorithm(n1, n2, container);
+        // doubleEndDiffAlgorithm(n1, n2, container);
         // simpleDiffAlgorithm(n1, n2, container)
       } else {
         setElementText(container, "");
@@ -262,6 +265,106 @@ export const createRenderer = ({
         for (let i = oldStartIdx; i <= oldEndIdx; i++) {
           if (oldChildren[i]) {
             unmount(oldChildren[i]);
+          }
+        }
+      }
+    }
+
+    function quickDiffAlgorithm(n1, n2, container) {
+      const oldChildren = n1.children;
+      const newChildren = n2.children;
+      let j = 0;
+      let oldStartNode = oldChildren[j];
+      let newStartNode = newChildren[j];
+      let newEndIdx = newChildren.length - 1;
+      let oldEndIdx = oldChildren.length - 1;
+      let newEndNode = newChildren[newEndIdx];
+      let oldEndNode = oldChildren[oldEndIdx];
+      while (oldStartNode.key === newStartNode.key) {
+        patch(oldStartNode, newStartNode, container);
+        j++;
+        oldStartNode = oldChildren[j];
+        newStartNode = newChildren[j];
+      }
+
+      while (oldEndNode.key === newEndNode.key) {
+        patch(oldEndNode, newEndNode, container);
+        oldEndIdx--;
+        newEndIdx--;
+        oldEndNode = oldChildren[oldEndIdx];
+        newEndNode = newChildren[newEndIdx];
+      }
+
+      // 仅新列表存在未处理节点
+      if (j <= newEndIdx && j > oldEndIdx) {
+        const anchorIndex = newEndIdx + 1;
+        const anchor =
+          anchorIndex < newChildren.length ? newChildren[anchorIndex].el : null;
+        while (j <= newEndIdx) {
+          patch(null, newChildren[j++], container, anchor);
+        }
+        // 仅旧列表存在未处理节点
+      } else if (j <= oldEndIdx && j > newEndIdx) {
+        for (let i = j; i <= oldEndIdx; i++) {
+          unmount(oldChildren[i]);
+        }
+      } else {
+        // 相同前后置元素压缩后，新旧列表仍均存在未处理节点
+        const count = newEndIdx - j + 1;
+        const source = new Array(count).fill(-1);
+        const oldStartIndex = j;
+        const newStartIndex = j;
+        const keyIndex = {};
+        for (let i = newStartIndex; i <= newEndIdx; i++) {
+          const key = newChildren[i].key;
+          keyIndex[key] = i;
+        }
+        let moved = false;
+        let pos = 0;
+        let patched = 0;
+        for (let i = oldStartIndex; i <= oldEndIdx; i++) {
+          const oldNode = oldChildren[i];
+          if (patched <= count) {
+            const k = keyIndex[oldNode.key];
+            if (k == null) {
+              unmount(oldNode);
+            } else {
+              patch(oldNode, newChildren[k], container);
+              patched++;
+              // 构建 source 数组，用来寻找最长递增子序列
+              source[k - newStartIndex] = i;
+              console.log("🚀 file:vue-renderer.ts-line:336 ", i, k, pos);
+              // 判断是否有节点移动
+              if (i < pos) {
+                moved = true;
+              } else {
+                pos = i;
+              }
+            }
+          } else {
+            unmount(oldNode);
+          }
+        }
+        if (moved) {
+          const seq = listToSequence(source);
+          let s = seq.length - 1;
+          let i = count - 1;
+          for (; i >= 0; i--) {
+            if (source[i] === -1) {
+              const pos = i + newStartIndex;
+              const newNode = newChildren[pos];
+              const anchor =
+                pos + 1 < newChildren.length ? newChildren[pos + 1].el : null;
+              patch(null, newNode, container, anchor);
+            } else if (i !== seq[s]) {
+              const pos = i + newStartIndex;
+              const newNode = newChildren[pos];
+              const anchor =
+                pos + 1 < newChildren.length ? newChildren[pos + 1].el : null;
+              insert(newNode.el, container, anchor);
+            } else {
+              s--;
+            }
           }
         }
       }
