@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { parseTokens, tokenize } from "./vue-compiler";
+import { parseTokens, tokenize } from "@/utils/vue-compiler";
 
 describe("Vue Compiler", () => {
   describe("tokenize", () => {
