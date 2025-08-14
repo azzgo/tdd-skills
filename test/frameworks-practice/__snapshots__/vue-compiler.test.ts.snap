@@ -1,0 +1,69 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Vue Compiler > AST Transformation > transform AST to render function 1`] = `
+{
+  "body": [
+    {
+      "return": {
+        "arguments": [
+          {
+            "type": "StringLiteral",
+            "value": "div",
+          },
+          {
+            "elements": [
+              {
+                "arguments": [
+                  {
+                    "type": "StringLiteral",
+                    "value": "p",
+                  },
+                  {
+                    "type": "StringLiteral",
+                    "value": "Vue",
+                  },
+                ],
+                "callee": {
+                  "name": "h",
+                  "type": "Identifier",
+                },
+                "type": "CallExpression",
+              },
+              {
+                "arguments": [
+                  {
+                    "type": "StringLiteral",
+                    "value": "p",
+                  },
+                  {
+                    "type": "StringLiteral",
+                    "value": "Template",
+                  },
+                ],
+                "callee": {
+                  "name": "h",
+                  "type": "Identifier",
+                },
+                "type": "CallExpression",
+              },
+            ],
+            "type": "ArrayExpression",
+          },
+        ],
+        "callee": {
+          "name": "h",
+          "type": "Identifier",
+        },
+        "type": "CallExpression",
+      },
+      "type": "ReturnStatement",
+    },
+  ],
+  "id": {
+    "name": "render",
+    "type": "Identifier",
+  },
+  "params": [],
+  "type": "FunctionDecl",
+}
+`;

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { parseTokens, tokenize } from "@/utils/vue-compiler";
+import { parseTokens, tokenize, transformAST } from "@/utils/vue-compiler";
 
 describe("Vue Compiler", () => {
   describe("tokenize", () => {
@@ -70,6 +70,44 @@ describe("Vue Compiler", () => {
           },
         ],
       });
+    });
+  });
+
+  describe("AST Transformation", () => {
+    test("transform AST to render function", () => {
+      const ast = {
+        type: "Root",
+        children: [
+          {
+            type: "Element",
+            tag: "div",
+            children: [
+              {
+                type: "Element",
+                tag: "p",
+                children: [
+                  {
+                    type: "Text",
+                    content: "Vue",
+                  },
+                ],
+              },
+              {
+                type: "Element",
+                tag: "p",
+                children: [
+                  {
+                    type: "Text",
+                    content: "Template",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      transformAST(ast as any);
+      expect((ast as any).jsNode).toMatchSnapshot();
     });
   });
 });
