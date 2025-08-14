@@ -5,7 +5,7 @@ type Token = {
 };
 
 type ASTNode = {
-  type: string;
+  type: "ELement" | "Text" | "Root";
   tag?: string;
   content?: string;
   children?: ASTNode[];
@@ -104,7 +104,37 @@ export const tokenize = (source: string): Token[] => {
   return tokens;
 };
 
-export const parseTokens = (tokens: Token[]): ASTNode => {};
+export const parseTokens = (tokens: Token[]): ASTNode => {
+  const root: ASTNode = { type: "Root", children: [] };
+  const elementStack: ASTNode[] = [root];
+  while (tokens.length > 0) {
+    const parent = elementStack[elementStack.length - 1];
+    const t = tokens[0];
+    switch (t.type) {
+      case "tag":
+        const elementNode = {
+          type: "Element",
+          tag: t.name,
+          children: [],
+        };
+        parent.children.push(elementNode);
+        elementStack.push(elementNode);
+        break;
+      case "text":
+        const textNode = {
+          type: "Text",
+          content: t.content,
+        };
+        parent.children.push(textNode);
+        break;
+      case "tagEnd":
+        elementStack.pop();
+        break;
+    }
+    tokens.shift();
+  }
+  return root;
+};
 
 export const transformAST = (ast: ASTNode): JSASTNode => {};
 

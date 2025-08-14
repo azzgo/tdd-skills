@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { tokenize } from "./vue-compiler";
+import { parseTokens, tokenize } from "./vue-compiler";
 
 describe("Vue Compiler", () => {
   describe("tokenize", () => {
@@ -24,6 +24,52 @@ describe("Vue Compiler", () => {
         { type: "tagEnd", name: "p" },
         { type: "tagEnd", name: "div" },
       ]);
+    });
+  });
+
+  describe("AST Generation", () => {
+    test("parseTokens to ast", () => {
+      const ast = parseTokens([
+        { type: "tag", name: "div" },
+        { type: "tag", name: "p" },
+        { type: "text", content: "Vue" },
+        { type: "tagEnd", name: "p" },
+        { type: "tag", name: "p" },
+        { type: "text", content: "Template" },
+        { type: "tagEnd", name: "p" },
+        { type: "tagEnd", name: "div" },
+      ]);
+      expect(ast).toEqual({
+        type: "Root",
+        children: [
+          {
+            type: "Element",
+            tag: "div",
+            children: [
+              {
+                type: "Element",
+                tag: "p",
+                children: [
+                  {
+                    type: "Text",
+                    content: "Vue",
+                  },
+                ],
+              },
+              {
+                type: "Element",
+                tag: "p",
+                children: [
+                  {
+                    type: "Text",
+                    content: "Template",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
     });
   });
 });
