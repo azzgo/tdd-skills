@@ -307,13 +307,84 @@ export const transformAST = (ast: ASTNode): void => {
       context.currentNode = null;
     },
     childIndex: 0,
-    nodeTransforms: [
-      transformRoot,
-      transformText,
-      transformElement,
-    ],
+    nodeTransforms: [transformRoot, transformText, transformElement],
   };
   transformNode(ast, context);
 };
 
-export const generateJS = (jsAst: JSASTNode): string => {};
+export const generateJS = (jsAst: JSASTNode): string => {
+  const generateNode = (node: JSASTNode, context): string => {
+    switch (node.type) {
+      case "FunctionDecl":
+        context.push(`function ${node.id.name}(`);
+        context.push(node.params.join(", "));
+        context.push(") {");
+        context.enIndent();
+        if (Array.isArray(node.body)) {
+          node.body.forEach((stmt) => {
+            generateNode(stmt, context);
+          });
+        } else {
+          generateNode(node.body, context);
+        }
+        context.deindent();
+        context.push("}");
+        return "";
+      case "CallExpression":
+        context.push(`${node.callee.name}(`);
+        node.arguments.forEach((arg, index) => {
+          if (index > 0) {
+            context.push(", ");
+          }
+          generateNode(arg, context);
+        });
+        context.push(")");
+        return "";
+      case "StringLiteral":
+        context.push(`"${node.value}"`);
+        return "";
+      case "ArrayExpression":
+        context.push("[");
+        node.elements.forEach((element, index) => {
+          if (index > 0) {
+            context.push(", ");
+          }
+          generateNode(element, context);
+        });
+        context.push("]");
+        return "";
+      case "ReturnStatement":
+        context.push("return ");
+        generateNode(node.return, context);
+        context.push(";");
+        return "";
+      case "Identifier":
+        context.push(node.name);
+        return "";
+      default:
+        throw new Error(`Unknown node type: ${node.type}`);
+    }
+  };
+  const context = {
+    code: "",
+    indent: 0,
+    push(code: string): void {
+      this.code += code;
+    },
+    newline(): void {
+      this.push("\n" + "  ".repeat(this.indent));
+    },
+    enIndent(): void {
+      this.indent++;
+      this.newline();
+    },
+    deindent(): void {
+      this.indent--;
+      this.newline();
+    },
+  };
+
+  generateNode(jsAst, context);
+
+  return context.code;
+};

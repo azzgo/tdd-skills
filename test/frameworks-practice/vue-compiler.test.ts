@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { parseTokens, tokenize, transformAST } from "@/utils/vue-compiler";
+import {
+  generateJS,
+  parseTokens,
+  tokenize,
+  transformAST,
+} from "@/utils/vue-compiler";
 
 describe("Vue Compiler", () => {
   describe("tokenize", () => {
@@ -108,6 +113,79 @@ describe("Vue Compiler", () => {
       };
       transformAST(ast as any);
       expect((ast as any).jsNode).toMatchSnapshot();
+    });
+  });
+
+  describe("Code Generation", () => {
+    test("generate code from AST", () => {
+      const jsNode = {
+        body: [
+          {
+            return: {
+              arguments: [
+                {
+                  type: "StringLiteral",
+                  value: "div",
+                },
+                {
+                  elements: [
+                    {
+                      arguments: [
+                        {
+                          type: "StringLiteral",
+                          value: "p",
+                        },
+                        {
+                          type: "StringLiteral",
+                          value: "Vue",
+                        },
+                      ],
+                      callee: {
+                        name: "h",
+                        type: "Identifier",
+                      },
+                      type: "CallExpression",
+                    },
+                    {
+                      arguments: [
+                        {
+                          type: "StringLiteral",
+                          value: "p",
+                        },
+                        {
+                          type: "StringLiteral",
+                          value: "Template",
+                        },
+                      ],
+                      callee: {
+                        name: "h",
+                        type: "Identifier",
+                      },
+                      type: "CallExpression",
+                    },
+                  ],
+                  type: "ArrayExpression",
+                },
+              ],
+              callee: {
+                name: "h",
+                type: "Identifier",
+              },
+              type: "CallExpression",
+            },
+            type: "ReturnStatement",
+          },
+        ],
+        id: {
+          name: "render",
+          type: "Identifier",
+        },
+        params: [],
+        type: "FunctionDecl",
+      };
+
+      const code = generateJS(jsNode);
+      expect(code).toMatchSnapshot();
     });
   });
 });

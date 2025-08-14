@@ -67,3 +67,9 @@ exports[`Vue Compiler > AST Transformation > transform AST to render function 1`
   "type": "FunctionDecl",
 }
 `;
+
+exports[`Vue Compiler > Code Generation > generate code from AST 1`] = `
+"function render() {
+  return h("div", [h("p", "Vue"), h("p", "Template")]);
+}"
+`;
