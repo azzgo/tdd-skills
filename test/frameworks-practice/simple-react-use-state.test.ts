@@ -46,7 +46,8 @@ function schedule() {
   }
 
   callbackNode = setTimeout(() => {
-    workInProgressHook = fiber.memoizedState;
+    // this line no use for this test
+    // workInProgressHook = fiber.memoizedState;
     appInstance = fiber.stateNode();
     isMount = false;
   });
