@@ -20,7 +20,7 @@ const inorderTraversalRecursive = (
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
 ) => {
-  if (!root?.val) {
+  if (root == null) {
     return;
   }
   inorderTraversal(root.left, traverseFn);
@@ -32,7 +32,7 @@ const inorderTraversalIterative = (
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
 ) => {
-  if (!root?.val) {
+  if (root == null) {
     return;
   }
   const stack = [];
@@ -93,7 +93,7 @@ const preorderTraversalRecursive = (
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
 ) => {
-  if (!root?.val) {
+  if (root == null) {
     return;
   }
   traverseFn(root);
@@ -105,7 +105,7 @@ const preorderTraversalIterative = (
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
 ) => {
-  if (!root?.val) {
+  if (root == null) {
     return [];
   }
   const stack: BinaryTreeNode[] = [root];
@@ -158,7 +158,7 @@ const postorderTraversalRecursive = (
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
 ) => {
-  if (!root?.val) {
+  if (root == null) {
     return;
   }
   postorderTraversal(root.left, traverseFn);
@@ -169,7 +169,7 @@ const postorderTraversalIterative = (
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
 ) => {
-  if (!root?.val) {
+  if (root == null) {
     return;
   }
   const stack = [root];
@@ -238,4 +238,42 @@ export function levelOrderTraversal(
       queue.push(current.right);
     }
   }
+}
+
+export function arrayToTree(arr: number[]): BinaryTreeNode | null {
+  if (!arr.length) return null;
+  const nodes = arr.map(v => v === null ? null : new BinaryTreeNode(v));
+  let i = 0, j = 1;
+  while (j < nodes.length) {
+    if (nodes[i]) {
+      nodes[i]!.left = nodes[j++] ?? null;
+      if (j < nodes.length) nodes[i]!.right = nodes[j++] ?? null;
+    } else {
+      j += 2;
+    }
+    i++;
+  }
+  return nodes[0];
+}
+
+// 将二叉树按层序转为数组
+export function treeToArray(root: BinaryTreeNode | null): number[] {
+  if (!root) return [];
+  const result: (number | null)[] = [];
+  const queue: (BinaryTreeNode | null)[] = [root];
+  while (queue.length) {
+    const node = queue.shift();
+    if (node) {
+      result.push(node.val);
+      queue.push(node.left);
+      queue.push(node.right);
+    } else {
+      result.push(null);
+    }
+  }
+  // 去除末尾多余的 null
+  while (result.length && result[result.length - 1] === null) {
+    result.pop();
+  }
+  return result as number[];
 }
