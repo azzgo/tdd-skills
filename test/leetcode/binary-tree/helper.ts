@@ -12,8 +12,7 @@ export class BinaryTreeNode {
     this.right = right;
   }
 }
-type TRAVERSAL_TYPE = "iterative" | "recursive" | "mark-iterative";
-
+type TRAVERSAL_TYPE = "iterative" | "recursive" | "mark-iterative" | "morris";
 const traversalType: TRAVERSAL_TYPE = "mark-iterative";
 
 const inorderTraversalRecursive = (
@@ -45,6 +44,33 @@ const inorderTraversalIterative = (
       cur = stack.pop()!;
       traverseFn(cur);
       cur = cur?.right;
+    }
+  }
+};
+
+// Morris 中序遍历
+const inorderTraversalMorris = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
+  let cur = root;
+  while (cur) {
+    if (!cur.left) {
+      traverseFn(cur);
+      cur = cur.right;
+    } else {
+      let predecessor = cur.left;
+      while (predecessor.right && predecessor.right !== cur) {
+        predecessor = predecessor.right;
+      }
+      if (!predecessor.right) {
+        predecessor.right = cur;
+        cur = cur.left;
+      } else {
+        predecessor.right = null;
+        traverseFn(cur);
+        cur = cur.right;
+      }
     }
   }
 };
@@ -86,6 +112,9 @@ export function inorderTraversal(
     case "mark-iterative":
       inorderTraversalMarkIterative(root, traverseFn);
       break;
+    case "morris":
+      inorderTraversalMorris(root, traverseFn);
+      break;
   }
 }
 
@@ -114,6 +143,32 @@ const preorderTraversalIterative = (
     traverseFn(cur);
     if (cur?.right) stack.push(cur.right);
     if (cur?.left) stack.push(cur.left);
+  }
+};
+// Morris 先序遍历
+const preorderTraversalMorris = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
+  let cur = root;
+  while (cur) {
+    if (!cur.left) {
+      traverseFn(cur);
+      cur = cur.right;
+    } else {
+      let predecessor = cur.left;
+      while (predecessor.right && predecessor.right !== cur) {
+        predecessor = predecessor.right;
+      }
+      if (!predecessor.right) {
+        traverseFn(cur);
+        predecessor.right = cur;
+        cur = cur.left;
+      } else {
+        predecessor.right = null;
+        cur = cur.right;
+      }
+    }
   }
 };
 const preorderTraversalMarkIterative = (
@@ -151,6 +206,9 @@ export function preorderTraversal(
     case "mark-iterative":
       preorderTraversalMarkIterative(root, traverseFn);
       break;
+    case "morris":
+      preorderTraversalMorris(root, traverseFn);
+      break;
   }
 }
 
@@ -184,6 +242,14 @@ const postorderTraversalIterative = (
     traverseFn(result[i]);
   }
 };
+// Morris 后序遍历
+const postorderTraversalMorris = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
+    throw new Error('not Implement yet');
+};
+
 const postorderTraversalMarkIterative = (
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
@@ -217,6 +283,10 @@ export function postorderTraversal(
       break;
     case "mark-iterative":
       postorderTraversalMarkIterative(root, traverseFn);
+      break;
+    case "morris":
+      postorderTraversalMorris(root, traverseFn);
+      break;
   }
 }
 export function levelOrderTraversal(
@@ -242,8 +312,9 @@ export function levelOrderTraversal(
 
 export function arrayToTree(arr: number[]): BinaryTreeNode | null {
   if (!arr.length) return null;
-  const nodes = arr.map(v => v === null ? null : new BinaryTreeNode(v));
-  let i = 0, j = 1;
+  const nodes = arr.map((v) => (v === null ? null : new BinaryTreeNode(v)));
+  let i = 0,
+    j = 1;
   while (j < nodes.length) {
     if (nodes[i]) {
       nodes[i]!.left = nodes[j++] ?? null;
