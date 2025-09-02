@@ -29,9 +29,9 @@ function reverseStr(s: string, k: number) {
   };
 
   for (let i = 0; i < n; i += 2 * k) {
+    let start = i;
     let end = Math.min(i + k - 1, n - 1);
     while (start < end) {
-      let start = i;
       swap(start, end);
       start++;
       end--;
