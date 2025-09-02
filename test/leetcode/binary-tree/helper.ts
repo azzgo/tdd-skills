@@ -12,9 +12,9 @@ export class BinaryTreeNode {
     this.right = right;
   }
 }
-type TRAVERSAL_TYPE = "iterative" | "recursive";
+type TRAVERSAL_TYPE = "iterative" | "recursive" | "mark-iterative";
 
-const traversalType: TRAVERSAL_TYPE = "iterative";
+const traversalType: TRAVERSAL_TYPE = "mark-iterative";
 
 const inorderTraversalRecursive = (
   root: BinaryTreeNode | null,
@@ -49,6 +49,29 @@ const inorderTraversalIterative = (
   }
 };
 
+// null-mark
+const inorderTraversalMarkIterative = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
+  const stack: Array<BinaryTreeNode | null> = [];
+  if (root != null) stack.push(root);
+  while (stack.length) {
+    const top = stack[stack.length - 1];
+    if (top != null) {
+      stack.pop();
+      if (top.right) stack.push(top.right);
+      stack.push(top);
+      stack.push(null);
+      if (top.left) stack.push(top.left);
+    } else {
+      stack.pop();
+      const cur = stack.pop();
+      traverseFn(cur!);
+    }
+  }
+};
+
 export function inorderTraversal(
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
@@ -59,6 +82,9 @@ export function inorderTraversal(
       break;
     case "recursive":
       inorderTraversalRecursive(root, traverseFn);
+      break;
+    case "mark-iterative":
+      inorderTraversalMarkIterative(root, traverseFn);
       break;
   }
 }
@@ -90,6 +116,26 @@ const preorderTraversalIterative = (
     if (cur?.left) stack.push(cur.left);
   }
 };
+const preorderTraversalMarkIterative = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
+  const stack: Array<[BinaryTreeNode, boolean]> = [];
+  if (root != null) stack.push([root, false]);
+  while (stack.length) {
+    const el = stack.pop()!;
+    const visited = el[1];
+    const node = el[0];
+    if (visited) {
+      traverseFn(node);
+      continue;
+    } else {
+      if (node?.right) stack.push([node.right, false]);
+      if (node?.left) stack.push([node.left, false]);
+      stack.push([node, true]);
+    }
+  }
+};
 
 export function preorderTraversal(
   root: BinaryTreeNode | null,
@@ -101,6 +147,9 @@ export function preorderTraversal(
       break;
     case "recursive":
       preorderTraversalRecursive(root, traverseFn);
+      break;
+    case "mark-iterative":
+      preorderTraversalMarkIterative(root, traverseFn);
       break;
   }
 }
@@ -123,18 +172,37 @@ const postorderTraversalIterative = (
   if (!root?.val) {
     return;
   }
-  const stack = [root]
-  const result = []
+  const stack = [root];
+  const result = [];
   while (stack.length) {
     const cur = stack.pop()!;
     result.push(cur);
     if (cur?.left) stack.push(cur.left);
     if (cur?.right) stack.push(cur.right);
   }
-  for (let i = result.length -1 ; i >= 0 ; i--) {
+  for (let i = result.length - 1; i >= 0; i--) {
     traverseFn(result[i]);
   }
 };
+const postorderTraversalMarkIterative = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
+    const stack: Array<[BinaryTreeNode, boolean]> = [];
+    if (root != null) stack.push([root, false]);
+    while (stack.length) {
+      const el = stack.pop()!;
+      const visited = el[1];
+      const node = el[0];
+      if (visited) {
+        traverseFn(node);
+      } else {
+        stack.push([node, true]);
+        if(node.right) stack.push([node.right, false]);
+        if(node.left) stack.push([node.left, false]);
+      }
+    }
+  };
 
 export function postorderTraversal(
   root: BinaryTreeNode | null,
@@ -147,6 +215,8 @@ export function postorderTraversal(
     case "recursive":
       postorderTraversalRecursive(root, traverseFn);
       break;
+    case "mark-iterative":
+      postorderTraversalMarkIterative(root, traverseFn);
   }
 }
 export function levelOrderTraversal(
