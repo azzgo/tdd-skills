@@ -12,39 +12,142 @@ export class BinaryTreeNode {
     this.right = right;
   }
 }
+type TRAVERSAL_TYPE = "iterative" | "recursive";
 
-export function inorderTraversal(
+const traversalType: TRAVERSAL_TYPE = "iterative";
+
+const inorderTraversalRecursive = (
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
-) {
+) => {
   if (!root?.val) {
     return;
   }
   inorderTraversal(root.left, traverseFn);
   traverseFn(root);
   inorderTraversal(root.right, traverseFn);
-}
-export function preorderTraversal(
+};
+
+const inorderTraversalIterative = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
+  if (!root?.val) {
+    return;
+  }
+  const stack = [];
+  let cur: BinaryTreeNode | null = root;
+  while (cur != null || stack.length) {
+    if (cur != null) {
+      stack.push(cur);
+      cur = cur.left;
+    } else {
+      cur = stack.pop()!;
+      traverseFn(cur);
+      cur = cur?.right;
+    }
+  }
+};
+
+export function inorderTraversal(
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
 ) {
+  switch (traversalType) {
+    case "iterative":
+      inorderTraversalIterative(root, traverseFn);
+      break;
+    case "recursive":
+      inorderTraversalRecursive(root, traverseFn);
+      break;
+  }
+}
+
+const preorderTraversalRecursive = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
   if (!root?.val) {
     return;
   }
   traverseFn(root);
   preorderTraversal(root.left, traverseFn);
   preorderTraversal(root.right, traverseFn);
-}
-export function postorderTraversal(
+};
+
+const preorderTraversalIterative = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
+  if (!root?.val) {
+    return [];
+  }
+  const stack: BinaryTreeNode[] = [root];
+  while (stack.length) {
+    const cur = stack.pop()!;
+    traverseFn(cur);
+    if (cur?.right) stack.push(cur.right);
+    if (cur?.left) stack.push(cur.left);
+  }
+};
+
+export function preorderTraversal(
   root: BinaryTreeNode | null,
   traverseFn: (node: BinaryTreeNode) => void,
 ) {
+  switch (traversalType) {
+    case "iterative":
+      preorderTraversalIterative(root, traverseFn);
+      break;
+    case "recursive":
+      preorderTraversalRecursive(root, traverseFn);
+      break;
+  }
+}
+
+const postorderTraversalRecursive = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
   if (!root?.val) {
     return;
   }
   postorderTraversal(root.left, traverseFn);
   postorderTraversal(root.right, traverseFn);
   traverseFn(root);
+};
+const postorderTraversalIterative = (
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) => {
+  if (!root?.val) {
+    return;
+  }
+  const stack = [root]
+  const result = []
+  while (stack.length) {
+    const cur = stack.pop()!;
+    result.push(cur);
+    if (cur?.left) stack.push(cur.left);
+    if (cur?.right) stack.push(cur.right);
+  }
+  for (let i = result.length -1 ; i >= 0 ; i--) {
+    traverseFn(result[i]);
+  }
+};
+
+export function postorderTraversal(
+  root: BinaryTreeNode | null,
+  traverseFn: (node: BinaryTreeNode) => void,
+) {
+  switch (traversalType) {
+    case "iterative":
+      postorderTraversalIterative(root, traverseFn);
+      break;
+    case "recursive":
+      postorderTraversalRecursive(root, traverseFn);
+      break;
+  }
 }
 export function levelOrderTraversal(
   root: BinaryTreeNode | null,
