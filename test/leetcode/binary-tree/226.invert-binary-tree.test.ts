@@ -12,9 +12,9 @@
 // 输入：root = []
 // 输出：[]
 
-import { BinaryTreeNode, arrayToTree, inorderTraversal, treeToArray } from "./helper";
+import { TreeNode, arrayToTree, inorderTraversal, treeToArray } from "./helper";
 
-function invertTree(root: BinaryTreeNode | null): BinaryTreeNode | null {
+function invertTree(root: TreeNode | null): TreeNode | null {
   inorderTraversal(root, (node) => {
     if (node) {
       [node.left, node.right] = [node.right, node.left]

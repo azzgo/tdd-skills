@@ -1,23 +1,23 @@
-export class BinaryTreeNode {
+export class TreeNode {
   val: number;
-  left: BinaryTreeNode | null;
-  right: BinaryTreeNode | null;
+  left: TreeNode | null;
+  right: TreeNode | null;
   constructor(
     val: number,
-    left: BinaryTreeNode | null = null,
-    right: BinaryTreeNode | null = null,
+    left: TreeNode | null = null,
+    right: TreeNode | null = null,
   ) {
-    this.val = val;
-    this.left = left;
-    this.right = right;
+    this.val = val === undefined ? 0 : val;
+    this.left = left === undefined ? null : left;
+    this.right = right === undefined ? null : right;
   }
 }
 type TRAVERSAL_TYPE = "iterative" | "recursive" | "mark-iterative" | "morris";
 const traversalType: TRAVERSAL_TYPE = "mark-iterative";
 
 const inorderTraversalRecursive = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
   if (root == null) {
     return;
@@ -28,14 +28,14 @@ const inorderTraversalRecursive = (
 };
 
 const inorderTraversalIterative = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
   if (root == null) {
     return;
   }
   const stack = [];
-  let cur: BinaryTreeNode | null = root;
+  let cur: TreeNode | null = root;
   while (cur != null || stack.length) {
     if (cur != null) {
       stack.push(cur);
@@ -50,8 +50,8 @@ const inorderTraversalIterative = (
 
 // Morris 中序遍历
 const inorderTraversalMorris = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
   let cur = root;
   while (cur) {
@@ -77,10 +77,10 @@ const inorderTraversalMorris = (
 
 // null-mark
 const inorderTraversalMarkIterative = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
-  const stack: Array<BinaryTreeNode | null> = [];
+  const stack: Array<TreeNode | null> = [];
   if (root != null) stack.push(root);
   while (stack.length) {
     const top = stack[stack.length - 1];
@@ -99,8 +99,8 @@ const inorderTraversalMarkIterative = (
 };
 
 export function inorderTraversal(
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) {
   switch (traversalType) {
     case "iterative":
@@ -119,8 +119,8 @@ export function inorderTraversal(
 }
 
 const preorderTraversalRecursive = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
   if (root == null) {
     return;
@@ -131,13 +131,13 @@ const preorderTraversalRecursive = (
 };
 
 const preorderTraversalIterative = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
   if (root == null) {
     return [];
   }
-  const stack: BinaryTreeNode[] = [root];
+  const stack: TreeNode[] = [root];
   while (stack.length) {
     const cur = stack.pop()!;
     traverseFn(cur);
@@ -147,8 +147,8 @@ const preorderTraversalIterative = (
 };
 // Morris 先序遍历
 const preorderTraversalMorris = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
   let cur = root;
   while (cur) {
@@ -172,10 +172,10 @@ const preorderTraversalMorris = (
   }
 };
 const preorderTraversalMarkIterative = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
-  const stack: Array<[BinaryTreeNode, boolean]> = [];
+  const stack: Array<[TreeNode, boolean]> = [];
   if (root != null) stack.push([root, false]);
   while (stack.length) {
     const el = stack.pop()!;
@@ -193,8 +193,8 @@ const preorderTraversalMarkIterative = (
 };
 
 export function preorderTraversal(
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) {
   switch (traversalType) {
     case "iterative":
@@ -213,8 +213,8 @@ export function preorderTraversal(
 }
 
 const postorderTraversalRecursive = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
   if (root == null) {
     return;
@@ -224,8 +224,8 @@ const postorderTraversalRecursive = (
   traverseFn(root);
 };
 const postorderTraversalIterative = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
   if (root == null) {
     return;
@@ -244,35 +244,35 @@ const postorderTraversalIterative = (
 };
 // Morris 后序遍历
 const postorderTraversalMorris = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
-    throw new Error('not Implement yet');
+  throw new Error("not Implement yet");
 };
 
 const postorderTraversalMarkIterative = (
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) => {
-    const stack: Array<[BinaryTreeNode, boolean]> = [];
-    if (root != null) stack.push([root, false]);
-    while (stack.length) {
-      const el = stack.pop()!;
-      const visited = el[1];
-      const node = el[0];
-      if (visited) {
-        traverseFn(node);
-      } else {
-        stack.push([node, true]);
-        if(node.right) stack.push([node.right, false]);
-        if(node.left) stack.push([node.left, false]);
-      }
+  const stack: Array<[TreeNode, boolean]> = [];
+  if (root != null) stack.push([root, false]);
+  while (stack.length) {
+    const el = stack.pop()!;
+    const visited = el[1];
+    const node = el[0];
+    if (visited) {
+      traverseFn(node);
+    } else {
+      stack.push([node, true]);
+      if (node.right) stack.push([node.right, false]);
+      if (node.left) stack.push([node.left, false]);
     }
-  };
+  }
+};
 
 export function postorderTraversal(
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) {
   switch (traversalType) {
     case "iterative":
@@ -290,8 +290,8 @@ export function postorderTraversal(
   }
 }
 export function levelOrderTraversal(
-  root: BinaryTreeNode | null,
-  traverseFn: (node: BinaryTreeNode) => void,
+  root: TreeNode | null,
+  traverseFn: (node: TreeNode) => void,
 ) {
   const queue = [];
   let current;
@@ -310,9 +310,11 @@ export function levelOrderTraversal(
   }
 }
 
-export function arrayToTree(arr: number[]): BinaryTreeNode | null {
+type element = number | null;
+
+export function arrayToTree(arr: element[]): TreeNode | null {
   if (!arr.length) return null;
-  const nodes = arr.map((v) => (v === null ? null : new BinaryTreeNode(v)));
+  const nodes = arr.map((v) => (v === null ? null : new TreeNode(v)));
   let i = 0,
     j = 1;
   while (j < nodes.length) {
@@ -328,10 +330,10 @@ export function arrayToTree(arr: number[]): BinaryTreeNode | null {
 }
 
 // 将二叉树按层序转为数组
-export function treeToArray(root: BinaryTreeNode | null): number[] {
+export function treeToArray(root: TreeNode | null): number[] {
   if (!root) return [];
   const result: (number | null)[] = [];
-  const queue: (BinaryTreeNode | null)[] = [root];
+  const queue: (TreeNode | null)[] = [root];
   while (queue.length) {
     const node = queue.shift();
     if (node) {
