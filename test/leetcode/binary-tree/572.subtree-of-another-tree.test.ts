@@ -9,9 +9,14 @@
 //
 // 输入：root = [3,4,5,1,2,null,null,null,null,0], subRoot = [4,1,2]
 // 输出：false
-import { arrayToTree, TreeNode } from "./helper";
+import {
+  arrayToTree,
+  preorderTraversal,
+  TreeNode,
+  treeToArray,
+} from "./helper";
 
-const algorithmType: "dfs" | "kmp" | "hash" = "dfs";
+const algorithmType: "dfs" | "kmp" | "hash" = "kmp";
 
 function isSubtreeDfs(
   root: TreeNode | null,
@@ -41,7 +46,52 @@ function isSubtreeKMP(
   root: TreeNode | null,
   subRoot: TreeNode | null,
 ): boolean {
-  throw new Error("to be implement");
+  // 注意这里是搜索序列，为了确保不同的树出来的搜索序列相同
+  // 需要将 left 和 right 都明确出来
+  // -- 不然 [1,null, 2] 与 [1, 2, null] 的搜索序列是相同的
+  const treeToSearchPath = (tree: TreeNode | null) => {
+    const result: any[] = [];
+    preorderTraversal(tree, (node) => {
+      result.push(node.val);
+      if (node.left == null) result.push("l");
+      if (node.right == null) result.push("r");
+    });
+    return result;
+  };
+  const rootAsArray = treeToSearchPath(root);
+  const subRootAsArray = treeToSearchPath(subRoot);
+
+  // kmp next array assemble
+  const nextArray = new Array(subRootAsArray.length).fill(0);
+
+  let preIndex = 0;
+  for (let postIndex = 1; postIndex < subRootAsArray.length; postIndex++) {
+    while (
+      preIndex > 0 &&
+      subRootAsArray[preIndex] != subRootAsArray[postIndex]
+    ) {
+      preIndex = nextArray[preIndex - 1];
+    }
+    if (subRootAsArray[postIndex] === subRootAsArray[preIndex]) {
+      preIndex++;
+    }
+    nextArray[postIndex] = preIndex;
+  }
+
+  // kmp match algorithm
+  let matchIndex = 0;
+  for (let i = 0; i < rootAsArray.length; i++) {
+    while (matchIndex > 0 && rootAsArray[i] !== subRootAsArray[matchIndex]) {
+      matchIndex = nextArray[matchIndex - 1];
+    }
+    if (rootAsArray[i] === subRootAsArray[matchIndex]) {
+      matchIndex++;
+    }
+    if (matchIndex === subRootAsArray.length) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function isSubtreeHash(
