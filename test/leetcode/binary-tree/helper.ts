@@ -313,20 +313,32 @@ export function levelOrderTraversal(
 type element = number | null;
 
 export function arrayToTree(arr: element[]): TreeNode | null {
-  if (!arr.length) return null;
-  const nodes = arr.map((v) => (v === null ? null : new TreeNode(v)));
-  let i = 0,
-    j = 1;
-  while (j < nodes.length) {
-    if (nodes[i]) {
-      nodes[i]!.left = nodes[j++] ?? null;
-      if (j < nodes.length) nodes[i]!.right = nodes[j++] ?? null;
-    } else {
-      j += 2;
+  if (!arr.length || arr[0] === null) return null;
+  const root = new TreeNode(arr[0]!);
+  const queue: (TreeNode | null)[] = [root];
+  let i = 1;
+  while (i < arr.length) {
+    const parent = queue.shift();
+    if (parent) {
+      // 挂载左孩子
+      if (i < arr.length) {
+        if (arr[i] !== null) {
+          parent.left = new TreeNode(arr[i]!);
+          queue.push(parent.left);
+        }
+        i++;
+      }
+      // 挂载右孩子
+      if (i < arr.length) {
+        if (arr[i] !== null) {
+          parent.right = new TreeNode(arr[i]!);
+          queue.push(parent.right);
+        }
+        i++;
+      }
     }
-    i++;
   }
-  return nodes[0];
+  return root;
 }
 
 // 将二叉树按层序转为数组
