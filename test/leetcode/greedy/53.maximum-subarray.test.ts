@@ -28,7 +28,7 @@
 //
 // 进阶：如果你已经实现复杂度为 O(n) 的解法，尝试使用更为精妙的 分治法 求解。
 
-function maxSubArray(nums: number[]): number {
+function greedyImpl(nums: number[]) {
   let sum = 0;
   // 需要考虑负数场景，不然最大和可能只能在有正数场景下生效了
   let maxSum = -Infinity;
@@ -42,8 +42,31 @@ function maxSubArray(nums: number[]): number {
       sum = 0;
     }
   }
-
   return maxSum;
+}
+
+function dpImpl(nums: number[]): number {
+  if (nums.length === 0) return 0;
+  // dp 定义: 以 nums[i] 结尾的最大子序和
+  const dp = Array.from({ length: nums.length }, (_, i) => nums[i]);
+  let maxSum = dp[0];
+
+  for (let i = 1; i < nums.length; i++) {
+    dp[i] = Math.max(dp[i - 1] + nums[i], nums[i]);
+    maxSum = Math.max(maxSum, dp[i]);
+  }
+  return maxSum;
+}
+
+const implType: "greedy" | "dp" = "dp";
+
+function maxSubArray(nums: number[]): number {
+  switch (implType) {
+    case "greedy":
+      return greedyImpl(nums);
+    case "dp":
+      return dpImpl(nums);
+  }
 }
 
 import { describe, expect, test } from "vitest";
