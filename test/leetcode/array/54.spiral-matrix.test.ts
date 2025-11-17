@@ -16,44 +16,49 @@
 function spiralOrder(matrix: number[][]): number[] {
   if (matrix.length === 0 || matrix[0].length === 0) return [];
 
-  const result: number[] = [];
-  let xOffset = 0,
-    yOffset = 0;
-  const rows = matrix.length;
-  const cols = matrix[0].length;
-  let x: number, y: number;
-  let step = 1;
-  let loop = Math.min(Math.ceil(rows / 2), Math.ceil(cols / 2));
+  const result: number[] = []; // 存储遍历结果
+  let xOffset = 0, // 当前圈的左边界
+    yOffset = 0; // 当前圈的上边界
+  const rows = matrix.length; // 总行数
+  const cols = matrix[0].length; // 总列数
+  let x: number, y: number; // 用于遍历的临时变量
+  let step = 1; // 当前圈数（第几层）
+  let loop = Math.min(Math.ceil(rows / 2), Math.ceil(cols / 2)); // 需要遍历的圈数
   while (loop--) {
     x = xOffset;
     y = yOffset;
 
+    // 特殊情况：只剩下一行
     if (rows - step === yOffset) {
       result.push(...matrix[y].slice(xOffset, cols - step + 1));
       break;
     }
+    // 特殊情况：只剩下一列
     if (cols - step === xOffset) {
-      result.push(...matrix.slice(yOffset, rows - step + 1).map((row) => row[xOffset]));
+      result.push(
+        ...matrix.slice(yOffset, rows - step + 1).map((row) => row[xOffset]),
+      );
       break;
     }
 
-    // 从左到右
+    // 从左到右，遍历上边界（不包含右上角）
     for (x = xOffset; x < cols - step; x++) {
       result.push(matrix[y][x]);
     }
-    // 从上到下
+    // 从上到下，遍历右边界（不包含右下角）
     for (y = yOffset; y < rows - step; y++) {
       result.push(matrix[y][x]);
     }
-    // 从右到左
+    // 从右到左，遍历下边界（不包含左下角）
     for (x = cols - step; x > xOffset; x--) {
       result.push(matrix[y][x]);
     }
-    // 从下到上
+    // 从下到上，遍历左边界（不包含左上角）
     for (y = rows - step; y > yOffset; y--) {
       result.push(matrix[y][x]);
     }
 
+    // 进入下一圈
     xOffset++;
     yOffset++;
     step++;
@@ -93,6 +98,12 @@ test("case 4", () => {
 });
 
 test("case 5", () => {
-  const output = spiralOrder([[2,3,4],[5,6,7],[8,9,10],[11,12,13],[14,15,16]]);
-  expect(output).toEqual([2,3,4,7,10,13,16,15,14,11,8,5,6,9,12]);
+  const output = spiralOrder([
+    [2, 3, 4],
+    [5, 6, 7],
+    [8, 9, 10],
+    [11, 12, 13],
+    [14, 15, 16],
+  ]);
+  expect(output).toEqual([2, 3, 4, 7, 10, 13, 16, 15, 14, 11, 8, 5, 6, 9, 12]);
 });
