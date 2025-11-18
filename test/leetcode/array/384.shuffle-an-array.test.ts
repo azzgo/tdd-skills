@@ -41,3 +41,34 @@ class Solution {
     return this.nums;
   }
 }
+
+import { describe, expect, test } from "vitest";
+
+describe("Shuffle an Array", () => {
+  test("should shuffle and reset the array correctly", () => {
+    const nums = [1, 2, 3];
+    const solution = new Solution(nums);
+
+    // 检查 reset 返回初始数组
+    expect(solution.reset()).toEqual(nums);
+
+    // 检查 shuffle 返回的是原数组的一个排列
+    const shuffled = solution.shuffle();
+    expect(shuffled.sort()).toEqual(nums.slice().sort());
+
+    // 多次 shuffle 检查结果多样性
+    let isDifferent = false;
+    for (let i = 0; i < 10; i++) {
+      const result = solution.shuffle();
+      if (result.join() !== nums.join()) {
+        isDifferent = true;
+        break;
+      }
+    }
+    expect(isDifferent).toBe(true);
+
+    // 再次 reset 应该返回初始数组
+    expect(solution.reset()).toEqual(nums);
+  });
+});
+ 

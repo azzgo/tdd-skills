@@ -61,7 +61,7 @@ function ladderLength(
           if (newWord === endWord) {
             visitedMap.set(endWord, path + 1);
             return;
-          } else if (!visitedMap.has(newWord) && wordSet.includes(newWord)) {
+          } else if (!visitedMap.has(newWord) && wordSet.has(newWord)) {
             queue.push(newWord);
             visitedMap.set(newWord, path + 1);
           }
