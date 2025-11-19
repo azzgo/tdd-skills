@@ -23,7 +23,7 @@ const nextArray = (needle: string) => {
   let prefixEndIndex = 0;
   for (let postfixEndIndex = 1; postfixEndIndex < needle.length; postfixEndIndex++) {
     // 不匹配时，回退到上一匹配位置/匹配长度
-   while (prefixEndIndex > 0 && needle[postfixEndIndex] !== needle[prefixEndIndex]) {
+    while (prefixEndIndex > 0 && needle[postfixEndIndex] !== needle[prefixEndIndex]) {
       prefixEndIndex = next[prefixEndIndex - 1];
     }
     // 匹配时，前后缀匹配长度+1

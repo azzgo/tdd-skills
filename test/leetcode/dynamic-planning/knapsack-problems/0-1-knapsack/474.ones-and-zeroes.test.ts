@@ -50,7 +50,6 @@ function findMaxForm(strs: string[], m: number, n: number): number {
       }
     }
   }
-  console.log("🚀 file:474.ones-and-zeroes....-line:63 ", dp);
   return dp[m][n];
 }
 
@@ -65,7 +64,7 @@ describe("0-1 背包：474. 一和零", () => {
     expect(findMaxForm(["10", "0", "1"], 1, 1)).toBe(2);
   });
 
-  test.only("case 3", () => {
+  test("case 3", () => {
     expect(findMaxForm(["00011", "00001", "00001", "0011", "111"], 8, 5)).toBe(
       3,
     );
