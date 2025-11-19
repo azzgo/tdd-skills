@@ -52,3 +52,25 @@ export class ListNode {
     };
   }
 }
+
+export class DoubleListNode {
+  public key: number | null = null;
+  public val: number | null = null;
+  public next: DoubleListNode | null = null;
+  public prev: DoubleListNode | null = null;
+
+  constructor() {}
+
+  toJSON() {
+    const result = [];
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let cur: DoubleListNode | null = this;
+    let leftCount = 10;
+    while (cur != null && leftCount > 0) {
+      result.push({ key: cur.key, val: cur.val });
+      cur = cur.next;
+      leftCount--;
+    }
+    return result;
+  }
+}
